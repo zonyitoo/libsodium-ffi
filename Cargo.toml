@@ -9,7 +9,7 @@ repository = "https://github.com/zonyitoo/sodium-rs"
 description = "Native bindings to the libsodium library"
 
 [lib]
-name = "sodium"
+name = "libsodium-sys"
 
 [build-dependencies]
 pkg-config = "*"
