@@ -199,6 +199,30 @@ extern {
                                                           clen: libc::c_ulonglong,
                                                           n: *const libc::c_uchar,
                                                           k: *const libc::c_uchar) -> libc::c_int;
+
+    // sodium/crypto_core_hsalsa20.h
+    fn crypto_core_hsalsa20_outputbytes() -> libc::size_t;
+    fn crypto_core_hsalsa20_inputbytes() -> libc::size_t;
+    fn crypto_core_hsalsa20_keybytes() -> libc::size_t;
+    fn crypto_core_hsalsa20_constbytes() -> libc::size_t;
+    fn crypto_core_hsalsa20(out: *mut libc::c_uchar, in_: *const libc::c_uchar,
+                            k: *const libc::c_uchar, c: *const libc::c_uchar) -> libc::c_int;
+
+    // sodium/crypto_core_salsa20.h
+    fn crypto_core_salsa20_outputbytes() -> libc::size_t;
+    fn crypto_core_salsa20_inputbytes() -> libc::size_t;
+    fn crypto_core_salsa20_keybytes() -> libc::size_t;
+    fn crypto_core_salsa20_constbytes() -> libc::size_t;
+    fn crypto_core_salsa20(out: *mut libc::c_uchar, in_: *const libc::c_uchar,
+                           k: *const libc::c_uchar, c: *const libc::c_uchar) -> libc::c_int;
+
+    // sodium/crypto_core_salsa2012.h
+    fn crypto_core_salsa2012_outputbytes() -> libc::size_t;
+    fn crypto_core_salsa2012_inputbytes() -> libc::size_t;
+    fn crypto_core_salsa2012_keybytes() -> libc::size_t;
+    fn crypto_core_salsa2012_constbytes() -> libc::size_t;
+    fn crypto_core_salsa2012(out: *mut libc::c_uchar, in_: *const libc::c_uchar,
+                           k: *const libc::c_uchar, c: *const libc::c_uchar) -> libc::c_int;
 }
 
 // sodium/crypto_hash_sha256.h
