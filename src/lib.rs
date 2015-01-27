@@ -3,7 +3,8 @@
 
 extern crate libc;
 
-use libc::{size_t, c_uchar, c_int, c_ulonglong, c_char, uint32_t, uint64_t, uint8_t, int32_t, int64_t};
+use libc::{size_t, c_uchar, c_int, c_ulonglong, c_char, c_void,
+           uint32_t, uint64_t, uint8_t, int32_t, int64_t, uint16_t};
 
 #[link(name = "sodium")]
 extern {
@@ -538,6 +539,20 @@ extern {
                              k: *const c_uchar) -> c_int;
 
     // sodium/crypto_stream_aes128ctr.h
+    pub fn crypto_stream_aes128ctr_keybytes() -> size_t;
+    pub fn crypto_stream_aes128ctr_noncebytes() -> size_t;
+    pub fn crypto_stream_aes128ctr_beforenmbytes() -> size_t;
+    pub fn crypto_stream_aes128ctr(out: *mut c_uchar, outlen: c_ulonglong,
+                                   n: *const c_uchar, k: *const c_uchar) -> c_int;
+    pub fn crypto_stream_aes128ctr_xor(out: *mut c_uchar, in_: *const c_uchar,
+                                       inlen: c_ulonglong, n: *const c_uchar,
+                                       k: *const c_uchar) -> c_int;
+    pub fn crypto_stream_aes128ctr_beforenm(c: *mut c_uchar, k: *const c_uchar) -> c_int;
+    pub fn crypto_stream_aes128ctr_afternm(out: *mut c_uchar, len: c_ulonglong,
+                                           nounce: *const c_uchar, c: *const c_uchar) -> c_int;
+    pub fn crypto_stream_aes128ctr_xor_afternm(out: *mut c_uchar, in_: *const c_uchar,
+                                               len: c_ulonglong, nounce: *const c_uchar,
+                                               c: *const c_uchar) -> c_int;
 
     // sodium/crypto_stream_chacha20.h
     pub fn crypto_stream_chacha20_keybytes() -> size_t;
@@ -564,6 +579,76 @@ extern {
                                         mlen: c_ulonglong,
                                         n: *const c_uchar, ic: uint64_t,
                                         k: *const c_uchar) -> c_int;
+
+    // sodium/crypto_stream_salsa2012.h
+    pub fn crypto_stream_salsa2012_keybytes() -> size_t;
+    pub fn crypto_stream_salsa2012_noncebytes() -> size_t;
+    pub fn crypto_stream_salsa2012(c: *mut c_char, clen: c_ulonglong,
+                                   n: *const c_uchar, k: *const c_uchar) -> c_int;
+    pub fn crypto_stream_salsa2012_xor(c: *mut c_uchar, m: *const c_uchar,
+                                       mlen: c_ulonglong, n: *const c_uchar,
+                                       k: *const c_uchar) -> c_int;
+
+    // sodium/crypto_stream_salsa208.h
+    pub fn crypto_stream_salsa208_keybytes() -> size_t;
+    pub fn crypto_stream_salsa208_noncebytes() -> size_t;
+    pub fn crypto_stream_salsa208(c: *mut c_char, clen: c_ulonglong,
+                                  n: *const c_uchar, k: *const c_uchar) -> c_int;
+    pub fn crypto_stream_salsa208_xor(c: *mut c_uchar, m: *const c_uchar,
+                                      mlen: c_ulonglong, n: *const c_uchar,
+                                      k: *const c_uchar) -> c_int;
+
+    // sodium/crypto_stream_xsalsa20.h
+    pub fn crypto_stream_xsalsa20_keybytes() -> size_t;
+    pub fn crypto_stream_xsalsa20_noncebytes() -> size_t;
+    pub fn crypto_stream_xsalsa20(c: *mut c_char, clen: c_ulonglong,
+                                  n: *const c_uchar, k: *const c_uchar) -> c_int;
+    pub fn crypto_stream_xsalsa20_xor(c: *mut c_uchar, m: *const c_uchar,
+                                      mlen: c_ulonglong, n: *const c_uchar,
+                                      k: *const c_uchar) -> c_int;
+
+    // sodium/crypto_verify_16.h
+    pub fn crypto_verify_16_bytes() -> size_t;
+    pub fn crypto_verify_16(x: *const c_uchar, y: *const c_uchar) -> c_int;
+
+    // sodium/crypto_verify_32.h
+    pub fn crypto_verify_32_bytes() -> size_t;
+    pub fn crypto_verify_32(x: *const c_uchar, y: *const c_uchar) -> c_int;
+
+    // sodium/crypto_verify_64.h
+    pub fn crypto_verify_64_bytes() -> size_t;
+    pub fn crypto_verify_64(x: *const c_uchar, y: *const c_uchar) -> c_int;
+
+    // sodium/randombytes.h
+    pub fn randombytes_buf(buf: *mut c_void, size: size_t);
+    pub fn randombytes_random() -> uint32_t;
+    pub fn randombytes_uniform(upper_bound: uint32_t) -> uint32_t;
+    pub fn randombytes_stir();
+    pub fn randombytes_close() -> c_int;
+    pub fn randombytes_set_implementation(impl_: *mut randombytes_implementation) -> c_int;
+    pub fn randombytes_implementation_name() -> *const c_char;
+    pub fn randombytes(buf: *mut c_void, buf_len: c_ulonglong);
+
+    // sodium/randombytes_salsa20_random.h
+    pub fn randombytes_salsa20_implementation_name() -> *const c_char;
+    pub fn randombytes_salsa20_random() -> uint32_t;
+    pub fn randombytes_salsa20_random_stir();
+    pub fn randombytes_salsa20_random_uniform(upper_bound: uint32_t) -> uint32_t;
+    pub fn randombytes_salsa20_random_buf(buf: *mut c_void, size: size_t);
+    pub fn randombytes_salsa20_random_close() -> c_int;
+
+    // sodium/randombytes_sysrandom.h
+    pub fn randombytes_sysrandom_implementation_name() -> *const c_char;
+    pub fn randombytes_sysrandom() -> uint32_t;
+    pub fn randombytes_sysrandom_stir();
+    pub fn randombytes_sysrandom_uniform(upper_bound: uint32_t) -> uint32_t;
+    pub fn randombytes_sysrandom_buf(buf: *mut c_void, size: size_t);
+    pub fn randombytes_sysrandom_close() -> c_int;
+
+    // sodium/version.h
+    pub fn sodium_version_string() -> *const c_char;
+    pub fn sodium_library_version_major() -> c_int;
+    pub fn sodium_library_version_minor() -> c_int;
 }
 
 // sodium/crypto_hash_sha256.h
@@ -625,6 +710,18 @@ pub type crypto_int32 = int32_t;
 // sodium/crypto_int64.h
 pub type crypto_int64 = int64_t;
 
+// sodium/crypto_uint16.h
+pub type crypto_uint16 = uint16_t;
+
+// sodium/crypto_uint32.h
+pub type crypto_uint32 = uint32_t;
+
+// sodium/crypto_uint64.h
+pub type crypto_uint64 = uint64_t;
+
+// sodium/crypto_uint8.h
+pub type crypto_uint8 = uint8_t;
+
 // sodium/crypto_onetimeauth_poly1305.h
 #[repr(C)]
 #[derive(Copy)]
@@ -658,6 +755,25 @@ pub struct crypto_onetimeauth_poly1305_implementation {
     pub onetimeauth_final: extern fn(state: *mut crypto_onetimeauth_poly1305_state,
                                      out: *mut c_uchar) -> c_int,
 }
+
+// sodium/randombytes.h
+#[repr(C)]
+#[derive(Copy)]
+#[allow(raw_pointer_derive)]
+pub struct randombytes_implementation {
+    pub implementation_name: extern fn() -> *const c_char,
+    pub random: extern fn() -> uint32_t,
+    pub stir: extern fn(),
+    pub uniform: extern fn(upper_bound: uint32_t) -> uint32_t,
+    pub buf: extern fn(buf: *mut c_void, size: size_t),
+    pub close: extern fn() -> c_int,
+}
+
+// sodium/randombytes_salsa20_random.h
+pub type randombytes_salsa20_implementation = randombytes_implementation;
+
+// sodium/randombytes_sysrandom.h
+pub type randombytes_sysrandom_implementation = randombytes_implementation;
 
 #[test]
 fn test_it_work() {
