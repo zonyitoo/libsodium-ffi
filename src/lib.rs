@@ -1,4 +1,7 @@
 
+#![allow(non_camel_case_types)]
+#![allow(dead_code)]
+
 extern crate libc;
 
 #[link(name = "sodium")]
@@ -96,7 +99,7 @@ extern {
                                       keylen: libc::size_t) -> libc::c_int;
     fn crypto_auth_hmacsha512256_update(state: *mut crypto_auth_hmacsha512256_state,
                                         in_: *const libc::c_uchar,
-                                        inlen: c_ulonglong) -> libc::c_int;
+                                        inlen: libc::c_ulonglong) -> libc::c_int;
     fn crypto_auth_hmacsha512256_final(state: *mut crypto_auth_hmacsha512256_state,
                                        out: *mut libc::c_uchar) -> libc::c_int;
 
@@ -155,7 +158,7 @@ extern {
                           k: *const libc::c_uchar) -> libc::c_int;
     fn crypto_box_open_afternm(m: *mut libc::c_uchar, c: *const libc::c_uchar,
                                clen: libc::c_ulonglong, n: *const libc::c_uchar,
-                               k: *cosnt libc::c_uchar) -> libc::c_int;
+                               k: *const libc::c_uchar) -> libc::c_int;
 
     // sodium/crypto_box_curve25519xsalsa20poly1305.h
     fn crypto_box_curve25519xsalsa20poly1305_seedbytes() -> libc::size_t;
