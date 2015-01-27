@@ -976,12 +976,6 @@ pub struct randombytes_implementation {
     pub close: extern fn() -> c_int,
 }
 
-// sodium/randombytes_salsa20_random.h
-pub type randombytes_salsa20_implementation = randombytes_implementation;
-
-// sodium/randombytes_sysrandom.h
-pub type randombytes_sysrandom_implementation = randombytes_implementation;
-
 #[test]
 fn test_it_work() {
     unsafe {
