@@ -156,6 +156,46 @@ extern {
     fn crypto_box_open_afternm(m: *mut libc::c_uchar, c: *const libc::c_uchar,
                                clen: libc::c_ulonglong, n: *const libc::c_uchar,
                                k: *cosnt libc::c_uchar) -> libc::c_int;
+
+    // sodium/crypto_box_curve25519xsalsa20poly1305.h
+    fn crypto_box_curve25519xsalsa20poly1305_seedbytes() -> libc::size_t;
+    fn crypto_box_curve25519xsalsa20poly1305_publickeybytes() -> libc::size_t;
+    fn crypto_box_curve25519xsalsa20poly1305_secretkeybytes() -> libc::size_t;
+    fn crypto_box_curve25519xsalsa20poly1305_beforenmbytes() -> libc::size_t;
+    fn crypto_box_curve25519xsalsa20poly1305_noncebytes() -> libc::size_t;
+    fn crypto_box_curve25519xsalsa20poly1305_zerobytes() -> libc::size_t;
+    fn crypto_box_curve25519xsalsa20poly1305_boxzerobytes() -> libc::size_t;
+    fn crypto_box_curve25519xsalsa20poly1305_macbytes() -> libc::size_t;
+    fn crypto_box_curve25519xsalsa20poly1305(c: *mut libc::c_uchar,
+                                             m: *const libc::c_uchar,
+                                             mlen: libc::c_ulonglong,
+                                             n: *const libc::c_uchar,
+                                             pk: *const libc::c_uchar,
+                                             sk: *const libc::c_uchar) -> libc::c_int;
+    fn crypto_box_curve25519xsalsa20poly1305_open(m: *mut libc::c_uchar,
+                                                  c: *const libc::c_uchar,
+                                                  clen: libc::c_ulonglong,
+                                                  n: *const libc::c_uchar,
+                                                  pk: *const libc::c_uchar,
+                                                  sk: *const libc::c_uchar) -> libc::c_int;
+    fn crypto_box_curve25519xsalsa20poly1305_seed_keypair(pk: *mut libc::c_uchar,
+                                                          sk: *mut libc::c_uchar,
+                                                          seed: *const libc::c_uchar) -> libc::c_int;
+    fn crypto_box_curve25519xsalsa20poly1305_keypair(pk: *mut libc::c_uchar,
+                                                     sk: *mut libc::c_uchar) -> libc::c_int;
+    fn crypto_box_curve25519xsalsa20poly1305_beforenm(k: *mut libc::c_uchar,
+                                                      pk: *const libc::c_uchar,
+                                                      sk: *const libc::c_uchar) -> libc::c_int;
+    fn crypto_box_curve25519xsalsa20poly1305_afternm(c: *mut libc::c_uchar,
+                                                     m: *const libc::c_uchar,
+                                                     mlen: libc::c_ulonglong,
+                                                     n: *const libc::c_uchar,
+                                                     k: *const libc::c_uchar) -> libc::c_int;
+    fn crypto_box_curve25519xsalsa20poly1305_open_afternm(m: *mut libc::c_uchar,
+                                                          c: *const libc::c_uchar,
+                                                          clen: libc::c_ulonglong,
+                                                          n: *const libc::c_uchar,
+                                                          k: *const libc::c_uchar) -> libc::c_int;
 }
 
 // sodium/crypto_hash_sha256.h
