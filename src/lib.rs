@@ -551,6 +551,19 @@ extern {
                                          mlen: c_ulonglong,
                                          n: *const c_uchar, ic: uint64_t,
                                          k: *const c_uchar) -> c_int;
+
+    // sodium/crypto_stream_salsa20.h
+    pub fn crypto_stream_salsa20_keybytes() -> size_t;
+    pub fn crypto_stream_salsa20_noncebytes() -> size_t;
+    pub fn crypto_stream_salsa20(c: *mut c_char, clen: c_ulonglong,
+                                 n: *const c_uchar, k: *const c_uchar) -> c_int;
+    pub fn crypto_stream_salsa20_xor(c: *mut c_uchar, m: *const c_uchar,
+                                     mlen: c_ulonglong, n: *const c_uchar,
+                                     k: *const c_uchar) -> c_int;
+    pub fn crypto_stream_salsa20_xor_ic(c: *mut c_char, m: *const c_uchar,
+                                        mlen: c_ulonglong,
+                                        n: *const c_uchar, ic: uint64_t,
+                                        k: *const c_uchar) -> c_int;
 }
 
 // sodium/crypto_hash_sha256.h
