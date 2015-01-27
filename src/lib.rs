@@ -1,10 +1,215 @@
 
 #![allow(non_camel_case_types)]
+#![allow(non_upper_case_globals)]
 
 extern crate libc;
 
 use libc::{size_t, c_uchar, c_int, c_ulonglong, c_char, c_void,
            uint32_t, uint64_t, uint8_t, int32_t, int64_t, uint16_t};
+
+pub const crypto_aead_chacha20poly1305_KEYBYTES: size_t = 32;
+pub const crypto_aead_chacha20poly1305_NSECBYTES: size_t = 0;
+pub const crypto_aead_chacha20poly1305_NPUBBYTES: size_t = 8;
+pub const crypto_aead_chacha20poly1305_ABYTES: size_t = 16;
+
+// sodium/crypto_auth_hmacsha256.h
+pub const crypto_auth_hmacsha256_BYTES: size_t = 32;
+pub const crypto_auth_hmacsha256_KEYBYTES: size_t = 32;
+
+// sodium/crypto_auth.h
+pub const crypto_auth_BYTES: size_t = crypto_auth_hmacsha512256_BYTES;
+pub const crypto_auth_KEYBYTES: size_t = crypto_auth_hmacsha512256_KEYBYTES;
+pub const crypto_auth_PRIMITIVE: &'static str = "hmacsha512256";
+
+// sodium/crypto_auth_hmacsha512.h
+pub const crypto_auth_hmacsha512_BYTES: size_t = 64;
+pub const crypto_auth_hmacsha512_KEYBYTES: size_t = 32;
+
+// sodium/crypto_auth_hmacsha512256.h
+pub const crypto_auth_hmacsha512256_BYTES: size_t = 32;
+pub const crypto_auth_hmacsha512256_KEYBYTES: size_t = 32;
+
+// sodium/crypto_box.h
+pub const crypto_box_SEEDBYTES: size_t = crypto_box_curve25519xsalsa20poly1305_SEEDBYTES;
+pub const crypto_box_PUBLICKEYBYTES: size_t = crypto_box_curve25519xsalsa20poly1305_PUBLICKEYBYTES;
+pub const crypto_box_SECRETKEYBYTES: size_t = crypto_box_curve25519xsalsa20poly1305_SECRETKEYBYTES;
+pub const crypto_box_NONCEBYTES: size_t = crypto_box_curve25519xsalsa20poly1305_NONCEBYTES;
+pub const crypto_box_MACBYTES: size_t = crypto_box_curve25519xsalsa20poly1305_MACBYTES;
+pub const crypto_box_PRIMITIVE: &'static str = "curve25519xsalsa20poly1305";
+
+// sodium/crypto_box_curve25519xsalsa20poly1305.h
+pub const crypto_box_curve25519xsalsa20poly1305_SEEDBYTES: size_t = 32;
+pub const crypto_box_curve25519xsalsa20poly1305_PUBLICKEYBYTES: size_t = 32;
+pub const crypto_box_curve25519xsalsa20poly1305_SECRETKEYBYTES: size_t = 32;
+pub const crypto_box_curve25519xsalsa20poly1305_BEFORENMBYTES: size_t = 32;
+pub const crypto_box_curve25519xsalsa20poly1305_NONCEBYTES: size_t = 24;
+pub const crypto_box_curve25519xsalsa20poly1305_ZEROBYTES: size_t = 32;
+pub const crypto_box_curve25519xsalsa20poly1305_BOXZEROBYTES: size_t = 16;
+pub const crypto_box_curve25519xsalsa20poly1305_MACBYTES: size_t = crypto_box_curve25519xsalsa20poly1305_ZEROBYTES
+                                                            - crypto_box_curve25519xsalsa20poly1305_BOXZEROBYTES;
+
+
+// sodium/crypto_core_hsalsa20.h
+pub const crypto_core_hsalsa20_OUTPUTBYTES: size_t = 32;
+pub const crypto_core_hsalsa20_INPUTBYTES: size_t = 16;
+pub const crypto_core_hsalsa20_KEYBYTES: size_t = 32;
+pub const crypto_core_hsalsa20_CONSTBYTES: size_t = 16;
+
+// sodium/crypto_core_salsa20.h
+pub const crypto_core_salsa20_OUTPUTBYTES: size_t = 64;
+pub const crypto_core_salsa20_INPUTBYTES: size_t = 16;
+pub const crypto_core_salsa20_KEYBYTES: size_t = 32;
+pub const crypto_core_salsa20_CONSTBYTES: size_t = 16;
+
+// sodium/crypto_core_salsa2012.h
+pub const crypto_core_salsa2012_OUTPUTBYTES: size_t = 64;
+pub const crypto_core_salsa2012_INPUTBYTES: size_t = 16;
+pub const crypto_core_salsa2012_KEYBYTES: size_t = 32;
+pub const crypto_core_salsa2012_CONSTBYTES: size_t = 16;
+
+// sodium/crypto_core_salsa208.h
+pub const crypto_core_salsa208_OUTPUTBYTES: size_t = 64;
+pub const crypto_core_salsa208_INPUTBYTES: size_t = 16;
+pub const crypto_core_salsa208_KEYBYTES: size_t = 32;
+pub const crypto_core_salsa208_CONSTBYTES: size_t = 16;
+
+// sodium/crypto_generichash.h
+pub const crypto_generichash_BYTES_MIN: size_t = crypto_generichash_blake2b_BYTES_MIN;
+pub const crypto_generichash_BYTES_MAX: size_t = crypto_generichash_blake2b_BYTES_MAX;
+pub const crypto_generichash_BYTES: size_t = crypto_generichash_blake2b_BYTES;
+pub const crypto_generichash_KEYBYTES_MIN: size_t = crypto_generichash_blake2b_KEYBYTES_MIN;
+pub const crypto_generichash_KEYBYTES_MAX: size_t = crypto_generichash_blake2b_KEYBYTES_MAX;
+pub const crypto_generichash_KEYBYTES: size_t = crypto_generichash_blake2b_KEYBYTES;
+pub const crypto_generichash_PRIMITIVE: &'static str = "blake2b";
+
+// sodium/crypto_generichash_blake2b.h
+pub const crypto_generichash_blake2b_BYTES_MIN: size_t = 16;
+pub const crypto_generichash_blake2b_BYTES_MAX: size_t = 64;
+pub const crypto_generichash_blake2b_BYTES: size_t = 32;
+pub const crypto_generichash_blake2b_KEYBYTES_MIN: size_t = 16;
+pub const crypto_generichash_blake2b_KEYBYTES_MAX: size_t = 64;
+pub const crypto_generichash_blake2b_KEYBYTES: size_t = 32;
+pub const crypto_generichash_blake2b_SALTBYTES: size_t = 16;
+pub const crypto_generichash_blake2b_PERSONALBYTES: size_t = 16;
+
+// sodium/crypto_hash_sha512.h
+pub const crypto_hash_sha512_BYTES: size_t = 64;
+
+// sodium/crypto_hash_sha256.h
+pub const crypto_hash_sha256_BYTES: size_t = 32;
+
+// sodium/crypto_hash.h
+pub const crypto_hash_BYTES: size_t = crypto_hash_sha512_BYTES;
+pub const crypto_hash_PRIMITIVE: &'static str = "sha512";
+
+// sodium/crypto_onetimeauth.h
+pub const crypto_onetimeauth_BYTES: size_t = crypto_onetimeauth_poly1305_BYTES;
+pub const crypto_onetimeauth_KEYBYTES: size_t = crypto_onetimeauth_poly1305_KEYBYTES;
+pub const crypto_onetimeauth_PRIMITIVE: &'static str = "poly1305";
+
+// sodium/crypto_onetimeauth_poly1305.h
+pub const crypto_onetimeauth_poly1305_BYTES: size_t = 16;
+pub const crypto_onetimeauth_poly1305_KEYBYTES: size_t = 32;
+
+// sodium/crypto_pwhash_scryptsalsa208sha256.h
+pub const crypto_pwhash_scryptsalsa208sha256_SALTBYTES: size_t = 32;
+pub const crypto_pwhash_scryptsalsa208sha256_STRBYTES: size_t = 102;
+pub const crypto_pwhash_scryptsalsa208sha256_STRPREFIX: &'static str = "$7$";
+pub const crypto_pwhash_scryptsalsa208sha256_OPSLIMIT_INTERACTIVE: size_t = 524288;
+pub const crypto_pwhash_scryptsalsa208sha256_MEMLIMIT_INTERACTIVE: size_t = 16777216;
+pub const crypto_pwhash_scryptsalsa208sha256_OPSLIMIT_SENSITIVE: size_t = 33554432;
+pub const crypto_pwhash_scryptsalsa208sha256_MEMLIMIT_SENSITIVE: size_t = 1073741824;
+
+// sodium/crypto_scalarmult.h
+pub const crypto_scalarmult_BYTES: size_t = crypto_scalarmult_curve25519_BYTES;
+pub const crypto_scalarmult_SCALARBYTES: size_t = crypto_scalarmult_curve25519_SCALARBYTES;
+pub const crypto_scalarmult_PRIMITIVE: &'static str = "curve25519";
+
+// sodium/crypto_scalarmult_curve25519.h
+pub const crypto_scalarmult_curve25519_BYTES: size_t = 32;
+pub const crypto_scalarmult_curve25519_SCALARBYTES: size_t = 32;
+
+// sodium/crypto_secretbox.h
+pub const crypto_secretbox_KEYBYTES: size_t = crypto_secretbox_xsalsa20poly1305_KEYBYTES;
+pub const crypto_secretbox_NONCEBYTES: size_t = crypto_secretbox_xsalsa20poly1305_NONCEBYTES;
+pub const crypto_secretbox_MACBYTES: size_t = crypto_secretbox_xsalsa20poly1305_MACBYTES;
+pub const crypto_secretbox_PRIMITIVE: &'static str = "xsalsa20poly1305";
+pub const crypto_secretbox_ZEROBYTES: size_t = crypto_secretbox_xsalsa20poly1305_ZEROBYTES;
+pub const crypto_secretbox_BOXZEROBYTES: size_t = crypto_secretbox_xsalsa20poly1305_BOXZEROBYTES;
+
+// sodium/crypto_secretbox_xsalsa20poly1305.h
+pub const crypto_secretbox_xsalsa20poly1305_KEYBYTES: size_t = 32;
+pub const crypto_secretbox_xsalsa20poly1305_NONCEBYTES: size_t = 24;
+pub const crypto_secretbox_xsalsa20poly1305_ZEROBYTES: size_t = 32;
+pub const crypto_secretbox_xsalsa20poly1305_BOXZEROBYTES: size_t = 16;
+pub const crypto_secretbox_xsalsa20poly1305_MACBYTES: size_t = crypto_secretbox_xsalsa20poly1305_ZEROBYTES
+                                                                - crypto_secretbox_xsalsa20poly1305_BOXZEROBYTES;
+
+// sodium/crypto_shorthash.h
+pub const crypto_shorthash_BYTES: size_t = crypto_shorthash_siphash24_BYTES;
+pub const crypto_shorthash_KEYBYTES: size_t = crypto_shorthash_siphash24_KEYBYTES;
+pub const crypto_shorthash_PRIMITIVE: &'static str = "siphash24";
+
+// sodium/crypto_shorthash_siphash24.h
+pub const crypto_shorthash_siphash24_BYTES: size_t = 8;
+pub const crypto_shorthash_siphash24_KEYBYTES: size_t = 16;
+
+// sodium/crypto_sign.h
+pub const crypto_sign_BYTES: size_t = crypto_sign_ed25519_BYTES;
+pub const crypto_sign_SEEDBYTES: size_t = crypto_sign_ed25519_SEEDBYTES;
+pub const crypto_sign_PUBLICKEYBYTES: size_t = crypto_sign_ed25519_PUBLICKEYBYTES;
+pub const crypto_sign_SECRETKEYBYTES: size_t = crypto_sign_ed25519_SECRETKEYBYTES;
+pub const crypto_sign_PRIMITIVE: &'static str = "ed25519";
+
+// sodium/crypto_sign_ed25519.h
+pub const crypto_sign_ed25519_BYTES: size_t = 64;
+pub const crypto_sign_ed25519_SEEDBYTES: size_t = 32;
+pub const crypto_sign_ed25519_PUBLICKEYBYTES: size_t = 32;
+pub const crypto_sign_ed25519_SECRETKEYBYTES: size_t = 32 + 32;
+
+// sodium/crypto_sign_edwards25519sha512batch.h
+pub const crypto_sign_edwards25519sha512batch_BYTES: size_t = 64;
+pub const crypto_sign_edwards25519sha512batch_PUBLICKEYBYTES: size_t = 32;
+pub const crypto_sign_edwards25519sha512batch_SECRETKEYBYTES: size_t = 32 + 32;
+
+// sodium/crypto_stream.h
+pub const crypto_stream_KEYBYTES: size_t = crypto_stream_xsalsa20_KEYBYTES;
+pub const crypto_stream_NONCEBYTES: size_t = crypto_stream_xsalsa20_NONCEBYTES;
+pub const crypto_stream_PRIMITIVE: &'static str = "xsalsa20";
+
+// sodium/crypto_stream_aes128ctr.h
+pub const crypto_stream_aes128ctr_KEYBYTES: size_t = 16;
+pub const crypto_stream_aes128ctr_NONCEBYTES: size_t = 16;
+pub const crypto_stream_aes128ctr_BEFORENMBYTES: size_t = 1408;
+
+// sodium/crypto_stream_chacha20.h
+pub const crypto_stream_chacha20_KEYBYTES: size_t = 32;
+pub const crypto_stream_chacha20_NONCEBYTES: size_t = 8;
+
+// sodium/crypto_stream_salsa20.h
+pub const crypto_stream_salsa20_KEYBYTES: size_t = 32;
+pub const crypto_stream_salsa20_NONCEBYTES: size_t = 8;
+
+// sodium/crypto_stream_salsa2012.h
+pub const crypto_stream_salsa2012_KEYBYTES: size_t = 32;
+pub const crypto_stream_salsa2012_NONCEBYTES: size_t = 8;
+
+// sodium/crypto_stream_salsa208.h
+pub const crypto_stream_salsa208_KEYBYTES: size_t = 32;
+pub const crypto_stream_salsa208_NONCEBYTES: size_t = 8;
+
+// sodium/crypto_stream_xsalsa20.h
+pub const crypto_stream_xsalsa20_KEYBYTES: size_t = 32;
+pub const crypto_stream_xsalsa20_NONCEBYTES: size_t = 24;
+
+// sodium/crypto_verify_16.h
+pub const crypto_verify_16_BYTES: size_t = 16;
+
+// sodium/crypto_verify_32.h
+pub const crypto_verify_32_BYTES: size_t = 32;
+
+// sodium/crypto_verify_64.h
+pub const crypto_verify_64_BYTES: size_t = 64;
 
 #[link(name = "sodium")]
 extern {
@@ -636,6 +841,7 @@ extern {
     pub fn randombytes_salsa20_random_uniform(upper_bound: uint32_t) -> uint32_t;
     pub fn randombytes_salsa20_random_buf(buf: *mut c_void, size: size_t);
     pub fn randombytes_salsa20_random_close() -> c_int;
+    pub static randombytes_salsa20_implementation: randombytes_implementation;
 
     // sodium/randombytes_sysrandom.h
     pub fn randombytes_sysrandom_implementation_name() -> *const c_char;
@@ -644,6 +850,7 @@ extern {
     pub fn randombytes_sysrandom_uniform(upper_bound: uint32_t) -> uint32_t;
     pub fn randombytes_sysrandom_buf(buf: *mut c_void, size: size_t);
     pub fn randombytes_sysrandom_close() -> c_int;
+    pub static randombytes_sysrandom_implementation: randombytes_implementation;
 
     // sodium/version.h
     pub fn sodium_version_string() -> *const c_char;
