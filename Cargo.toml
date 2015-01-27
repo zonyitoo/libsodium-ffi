@@ -1,0 +1,15 @@
+[package]
+name = "libsodium-sys"
+version = "0.0.1"
+authors = ["Y. T. Chung <zonyitoo@gmail.com>"]
+links = "sodium"
+build = "build.rs"
+license = "MIT/ISC"
+repository = "https://github.com/zonyitoo/sodium-rs"
+description = "Native bindings to the libsodium library"
+
+[lib]
+name = "sodium"
+
+[build-dependencies]
+pkg-config = "*"
