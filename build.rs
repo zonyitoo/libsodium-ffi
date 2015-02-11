@@ -1,10 +1,14 @@
+#![feature(io)]
+#![feature(path)]
+#![feature(fs)]
+#![feature(env)]
 
 extern crate "pkg-config" as pkg_config;
 
-use std::io::{self, fs, Command};
-use std::os;
-use std::io::fs::PathExtensions;
-use std::io::process::InheritFd;
+use std::fs;
+use std::old_io::process::Command;
+use std::old_io::process::InheritFd;
+use std::env;
 
 fn main() {
     match pkg_config::find_library("libsodium") {
@@ -12,9 +16,9 @@ fn main() {
         Err(..) => {}
     }
 
-    let src = Path::new(os::getenv("CARGO_MANIFEST_DIR").unwrap());
-    let dst = Path::new(os::getenv("OUT_DIR").unwrap());
-    let target = os::getenv("TARGET").unwrap();
+    let src = Path::new(env::var_string("CARGO_MANIFEST_DIR").unwrap());
+    let dst = Path::new(env::var_string("OUT_DIR").unwrap());
+    let target = env::var_string("TARGET").unwrap();
 
     let root = src.join("libsodium");
 
@@ -23,10 +27,10 @@ fn main() {
             .arg(root.join("autogen.sh"))
             .cwd(&root));
 
-    let _ = fs::rmdir_recursive(&dst.join("include"));
-    let _ = fs::rmdir_recursive(&dst.join("lib"));
-    let _ = fs::rmdir_recursive(&dst.join("build"));
-    fs::mkdir(&dst.join("build"), io::USER_DIR).unwrap();
+    let _ = fs::remove_dir_all(&dst.join("include"));
+    let _ = fs::remove_dir_all(&dst.join("lib"));
+    let _ = fs::remove_dir_all(&dst.join("build"));
+    fs::create_dir(&dst.join("build")).unwrap();
 
     let mut config_opts = Vec::new();
     config_opts.push(format!("{:?}", root.join("configure")));
@@ -44,11 +48,11 @@ fn main() {
             .cwd(&dst.join("build")));
 
     run(Command::new(make())
-            .arg(format!("-j{}", os::getenv("NUM_JOBS").unwrap()))
+            .arg(format!("-j{}", env::var_string("NUM_JOBS").unwrap()))
             .cwd(&dst.join("build")));
 
     run(Command::new(make())
-            .arg(format!("-j{}", os::getenv("NUM_JOBS").unwrap()))
+            .arg(format!("-j{}", env::var_string("NUM_JOBS").unwrap()))
             .arg("install")
             .cwd(&dst.join("build")));
 
