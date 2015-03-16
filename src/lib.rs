@@ -212,7 +212,6 @@ pub const crypto_verify_32_BYTES: size_t = 32;
 // sodium/crypto_verify_64.h
 pub const crypto_verify_64_BYTES: size_t = 64;
 
-#[link(name = "sodium")]
 extern {
     // sodium/core.h
     pub fn sodium_init() -> c_int;
