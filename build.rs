@@ -1,8 +1,3 @@
-#![feature(path)]
-#![feature(fs)]
-#![feature(env)]
-#![feature(process)]
-
 extern crate "pkg-config" as pkg_config;
 
 use std::fs;
