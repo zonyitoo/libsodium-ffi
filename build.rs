@@ -54,7 +54,7 @@ fn main() {
             .arg("install")
             .current_dir(&dst.join("build")));
 
-    println!("cargo:rustc-flags=-L {}/lib -l sodium:static", dst.display());
+    println!("cargo:rustc-flags=-L {}/lib -l sodium", dst.display());
     println!("cargo:root={}", dst.display());
     println!("cargo:include={}/include", dst.display());
 }
