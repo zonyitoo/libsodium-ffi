@@ -40,6 +40,7 @@ pub const crypto_box_SECRETKEYBYTES: size_t = crypto_box_curve25519xsalsa20poly1
 pub const crypto_box_NONCEBYTES: size_t = crypto_box_curve25519xsalsa20poly1305_NONCEBYTES;
 pub const crypto_box_MACBYTES: size_t = crypto_box_curve25519xsalsa20poly1305_MACBYTES;
 pub const crypto_box_PRIMITIVE: &'static str = "curve25519xsalsa20poly1305";
+pub const crypto_box_SEALBYTES: size_t = crypto_box_PUBLICKEYBYTES + crypto_box_MACBYTES;
 
 // sodium/crypto_box_curve25519xsalsa20poly1305.h
 pub const crypto_box_curve25519xsalsa20poly1305_SEEDBYTES: size_t = 32;
@@ -355,6 +356,15 @@ extern {
                                             mac: *const c_uchar,
                                             clen: c_ulonglong, n: *const c_uchar,
                                             k: *const c_uchar) -> c_int;
+    pub fn crypto_box_sealbytes() -> size_t;
+    pub fn crypto_box_seal(out: *mut c_uchar,
+                           in_: *const c_uchar,
+                           inlen: c_ulonglong,
+                           pk: *const c_uchar) -> c_int;
+    pub fn crypto_box_seal_open(out: *mut c_uchar,
+                                in_: *const c_uchar,
+                                inlen: c_ulonglong,
+                                pk: *const c_uchar) -> c_int;
     pub fn crypto_box_zerobytes() -> size_t;
     pub fn crypto_box_boxzerobytes() -> size_t;
     pub fn crypto_box(c: *mut c_uchar, m: *const c_uchar,
@@ -814,6 +824,10 @@ extern {
     pub fn crypto_stream_xsalsa20_xor(c: *mut c_uchar, m: *const c_uchar,
                                       mlen: c_ulonglong, n: *const c_uchar,
                                       k: *const c_uchar) -> c_int;
+    pub fn crypto_stream_xsalsa20_xor_ic(c: *mut c_uchar, m: *const c_uchar,
+                                         mlen: c_ulonglong,
+                                         n: *const c_uchar, ic: uint64_t,
+                                         k: *const c_uchar) -> c_int;
 
     // sodium/crypto_verify_16.h
     pub fn crypto_verify_16_bytes() -> size_t;
