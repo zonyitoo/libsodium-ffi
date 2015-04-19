@@ -5,6 +5,9 @@
 
 extern crate libc;
 
+use std::mem;
+use std::ptr;
+
 use libc::{size_t, c_uchar, c_int, c_ulonglong, c_char, c_void,
            uint32_t, uint64_t, uint8_t, int32_t, int64_t, uint16_t};
 
@@ -867,9 +870,21 @@ pub struct crypto_hash_sha256_state {
     pub buf: [c_uchar; 64],
 }
 
+impl Clone for crypto_hash_sha256_state {
+    fn clone(&self) -> crypto_hash_sha256_state {
+        unsafe {
+            let mut x: crypto_hash_sha256_state = mem::uninitialized();
+            ptr::copy::<crypto_hash_sha256_state>(mem::transmute(self),
+                                                  mem::transmute(&mut x),
+                                                  mem::size_of::<crypto_hash_sha256_state>());
+            x
+        }
+    }
+}
+
 // sodium/crypto_auth_hmacsha256.h
 #[repr(C)]
-#[derive(Copy)]
+#[derive(Copy, Clone)]
 pub struct crypto_auth_hmacsha256_state {
     pub ictx: crypto_hash_sha256_state,
     pub octx: crypto_hash_sha256_state,
@@ -884,9 +899,21 @@ pub struct crypto_hash_sha512_state {
     pub buf: [c_uchar; 128],
 }
 
+impl Clone for crypto_hash_sha512_state {
+    fn clone(&self) -> crypto_hash_sha512_state {
+        unsafe {
+            let mut x: crypto_hash_sha512_state = mem::uninitialized();
+            ptr::copy::<crypto_hash_sha512_state>(mem::transmute(self),
+                                                  mem::transmute(&mut x),
+                                                  mem::size_of::<crypto_hash_sha512_state>());
+            x
+        }
+    }
+}
+
 // sodium/crypto_auth_hmacsha512.h
 #[repr(C)]
-#[derive(Copy)]
+#[derive(Copy, Clone)]
 pub struct crypto_auth_hmacsha512_state {
     pub ictx: crypto_hash_sha512_state,
     pub octx: crypto_hash_sha512_state,
@@ -906,6 +933,18 @@ pub struct crypto_generichash_blake2b_state {
     pub buf: [uint8_t; 2 * 128],
     pub buflen: size_t,
     pub last_node: uint8_t,
+}
+
+impl Clone for crypto_generichash_blake2b_state {
+    fn clone(&self) -> crypto_generichash_blake2b_state {
+        unsafe {
+            let mut x: crypto_generichash_blake2b_state = mem::uninitialized();
+            ptr::copy::<crypto_generichash_blake2b_state>(mem::transmute(self),
+                                                          mem::transmute(&mut x),
+                                                          mem::size_of::<crypto_generichash_blake2b_state>());
+            x
+        }
+    }
 }
 
 // sodium/crypto_generichash.h
@@ -937,12 +976,24 @@ pub struct crypto_onetimeauth_poly1305_state {
     pub opaque: [c_uchar; 136],
 }
 
+impl Clone for crypto_onetimeauth_poly1305_state {
+    fn clone(&self) -> crypto_onetimeauth_poly1305_state {
+        unsafe {
+            let mut x: crypto_onetimeauth_poly1305_state = mem::uninitialized();
+            ptr::copy::<crypto_onetimeauth_poly1305_state>(mem::transmute(self),
+                                                           mem::transmute(&mut x),
+                                                           mem::size_of::<crypto_onetimeauth_poly1305_state>());
+            x
+        }
+    }
+}
+
 // sodium/crypto_onetimeauth.h
 pub type crypto_onetimeauth_state = crypto_onetimeauth_poly1305_state;
 
 // sodium/crypto_onetimeauth_poly1305.h
 #[repr(C)]
-#[derive(Copy)]
+#[derive(Copy, Clone)]
 #[allow(raw_pointer_derive)]
 pub struct crypto_onetimeauth_poly1305_implementation {
     pub implementation_name: extern fn() -> *const c_char,
@@ -965,7 +1016,7 @@ pub struct crypto_onetimeauth_poly1305_implementation {
 
 // sodium/randombytes.h
 #[repr(C)]
-#[derive(Copy)]
+#[derive(Copy, Clone)]
 #[allow(raw_pointer_derive)]
 pub struct randombytes_implementation {
     pub implementation_name: extern fn() -> *const c_char,
