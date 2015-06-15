@@ -938,7 +938,7 @@ pub type crypto_auth_hmacsha512256_state = crypto_auth_hmacsha512_state;
 
 // sodium/crypto_generichash_blake2b.h
 #[repr(C)]
-#[packed]
+#[repr(packed)]
 #[derive(Copy)]
 pub struct crypto_generichash_blake2b_state {
     pub h: [uint64_t; 8],
