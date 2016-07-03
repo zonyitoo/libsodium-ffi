@@ -13,3 +13,6 @@ name = "libsodium_sys"
 
 [build-dependencies]
 pkg-config = "*"
+
+[dependencies]
+libc = "^0"

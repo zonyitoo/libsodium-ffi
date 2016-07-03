@@ -1,5 +1,3 @@
-#![feature(libc)]
-
 #![allow(non_camel_case_types)]
 #![allow(non_upper_case_globals)]
 
@@ -1008,7 +1006,6 @@ pub type crypto_onetimeauth_state = crypto_onetimeauth_poly1305_state;
 // sodium/crypto_onetimeauth_poly1305.h
 #[repr(C)]
 #[derive(Copy, Clone)]
-#[allow(raw_pointer_derive)]
 pub struct crypto_onetimeauth_poly1305_implementation {
     pub implementation_name: extern fn() -> *const c_char,
     pub onetimeauth: extern fn(out: *mut c_uchar,
@@ -1031,7 +1028,6 @@ pub struct crypto_onetimeauth_poly1305_implementation {
 // sodium/randombytes.h
 #[repr(C)]
 #[derive(Copy, Clone)]
-#[allow(raw_pointer_derive)]
 pub struct randombytes_implementation {
     pub implementation_name: extern fn() -> *const c_char,
     pub random: extern fn() -> uint32_t,
