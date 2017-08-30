@@ -748,9 +748,9 @@ extern {
     pub fn crypto_stream_keybytes() -> size_t;
     pub fn crypto_stream_noncebytes() -> size_t;
     pub fn crypto_stream_primitive() -> *const c_char;
-    pub fn crypto_stream(c: *mut c_char, clen: c_ulonglong,
+    pub fn crypto_stream(c: *mut c_uchar, clen: c_ulonglong,
                          n: *const c_uchar, k: *const c_uchar) -> c_int;
-    pub fn crypto_stream_xor(c: *mut c_char, m: *const c_uchar,
+    pub fn crypto_stream_xor(c: *mut c_uchar, m: *const c_uchar,
                              mlen: c_ulonglong, n: *const c_uchar,
                              k: *const c_uchar) -> c_int;
 
@@ -773,12 +773,12 @@ extern {
     // sodium/crypto_stream_chacha20.h
     pub fn crypto_stream_chacha20_keybytes() -> size_t;
     pub fn crypto_stream_chacha20_noncebytes() -> size_t;
-    pub fn crypto_stream_chacha20(c: *mut c_char, clen: c_ulonglong,
+    pub fn crypto_stream_chacha20(c: *mut c_uchar, clen: c_ulonglong,
                                   n: *const c_uchar, k: *const c_uchar) -> c_int;
     pub fn crypto_stream_chacha20_xor(c: *mut c_uchar, m: *const c_uchar,
                                       mlen: c_ulonglong, n: *const c_uchar,
                                       k: *const c_uchar) -> c_int;
-    pub fn crypto_stream_chacha20_xor_ic(c: *mut c_char, m: *const c_uchar,
+    pub fn crypto_stream_chacha20_xor_ic(c: *mut c_uchar, m: *const c_uchar,
                                          mlen: c_ulonglong,
                                          n: *const c_uchar, ic: uint64_t,
                                          k: *const c_uchar) -> c_int;
@@ -791,12 +791,12 @@ extern {
     // sodium/crypto_stream_salsa20.h
     pub fn crypto_stream_salsa20_keybytes() -> size_t;
     pub fn crypto_stream_salsa20_noncebytes() -> size_t;
-    pub fn crypto_stream_salsa20(c: *mut c_char, clen: c_ulonglong,
+    pub fn crypto_stream_salsa20(c: *mut c_uchar, clen: c_ulonglong,
                                  n: *const c_uchar, k: *const c_uchar) -> c_int;
     pub fn crypto_stream_salsa20_xor(c: *mut c_uchar, m: *const c_uchar,
                                      mlen: c_ulonglong, n: *const c_uchar,
                                      k: *const c_uchar) -> c_int;
-    pub fn crypto_stream_salsa20_xor_ic(c: *mut c_char, m: *const c_uchar,
+    pub fn crypto_stream_salsa20_xor_ic(c: *mut c_uchar, m: *const c_uchar,
                                         mlen: c_ulonglong,
                                         n: *const c_uchar, ic: uint64_t,
                                         k: *const c_uchar) -> c_int;
@@ -804,7 +804,7 @@ extern {
     // sodium/crypto_stream_salsa2012.h
     pub fn crypto_stream_salsa2012_keybytes() -> size_t;
     pub fn crypto_stream_salsa2012_noncebytes() -> size_t;
-    pub fn crypto_stream_salsa2012(c: *mut c_char, clen: c_ulonglong,
+    pub fn crypto_stream_salsa2012(c: *mut c_uchar, clen: c_ulonglong,
                                    n: *const c_uchar, k: *const c_uchar) -> c_int;
     pub fn crypto_stream_salsa2012_xor(c: *mut c_uchar, m: *const c_uchar,
                                        mlen: c_ulonglong, n: *const c_uchar,
@@ -813,7 +813,7 @@ extern {
     // sodium/crypto_stream_salsa208.h
     pub fn crypto_stream_salsa208_keybytes() -> size_t;
     pub fn crypto_stream_salsa208_noncebytes() -> size_t;
-    pub fn crypto_stream_salsa208(c: *mut c_char, clen: c_ulonglong,
+    pub fn crypto_stream_salsa208(c: *mut c_uchar, clen: c_ulonglong,
                                   n: *const c_uchar, k: *const c_uchar) -> c_int;
     pub fn crypto_stream_salsa208_xor(c: *mut c_uchar, m: *const c_uchar,
                                       mlen: c_ulonglong, n: *const c_uchar,
@@ -822,7 +822,7 @@ extern {
     // sodium/crypto_stream_xsalsa20.h
     pub fn crypto_stream_xsalsa20_keybytes() -> size_t;
     pub fn crypto_stream_xsalsa20_noncebytes() -> size_t;
-    pub fn crypto_stream_xsalsa20(c: *mut c_char, clen: c_ulonglong,
+    pub fn crypto_stream_xsalsa20(c: *mut c_uchar, clen: c_ulonglong,
                                   n: *const c_uchar, k: *const c_uchar) -> c_int;
     pub fn crypto_stream_xsalsa20_xor(c: *mut c_uchar, m: *const c_uchar,
                                       mlen: c_ulonglong, n: *const c_uchar,
