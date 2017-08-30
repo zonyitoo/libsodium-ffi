@@ -6,11 +6,25 @@ use std::env;
 use std::path::Path;
 
 fn main() {
+    // Use library provided by environ
+    if let Ok(lib_dir) = env::var("SODIUM_LIB_DIR") {
+        println!("cargo:rustc-link-search=native={}", lib_dir);
+
+        let mode = match env::var_os("SODIUM_STATIC") {
+            Some(_) => "static",
+            None => "dylib",
+        };
+        println!("cargo:rustc-link-lib={0}=sodium", mode);
+        return;
+    }
+
+    // Uses system-wide libsodium
     match pkg_config::find_library("libsodium") {
         Ok(..) => return,
         Err(..) => {}
     }
 
+    // Build one by ourselves
     let cargo_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     let output_dir = env::var("OUT_DIR").unwrap();
 
