@@ -1,5 +1,5 @@
 [package]
-name = "libsodium-sys"
+name = "libsodium"
 version = "0.1.1"
 authors = ["Y. T. Chung <zonyitoo@gmail.com>"]
 links = "sodium"
@@ -9,10 +9,10 @@ repository = "https://github.com/zonyitoo/sodium-rs"
 description = "Native bindings to the libsodium library"
 
 [lib]
-name = "libsodium_sys"
+name = "libsodium"
 
 [build-dependencies]
-pkg-config = "*"
+pkg-config = "0.3"
 
 [dependencies]
-libc = "^0"
+libc = "0.2"
