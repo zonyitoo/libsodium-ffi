@@ -18,10 +18,17 @@ fn main() {
         return;
     }
 
-    // Uses system-wide libsodium
-    match pkg_config::find_library("libsodium") {
-        Ok(..) => return,
-        Err(..) => {}
+    if let None = env::var_os("SODIUM_BUILD_STATIC") {
+        // Uses system-wide libsodium
+        match pkg_config::find_library("libsodium") {
+            Ok(..) => return,
+            Err(..) => {
+                panic!(
+                    "Missing libsodium library in your system, \
+                     try to use SODIUM_BUILD_STATIC=yes to build it from source"
+                )
+            }
+        }
     }
 
     // Build one by ourselves
@@ -68,9 +75,9 @@ fn main() {
             .arg("install")
             .current_dir(&dst.join("build")));
 
-    println!("cargo:rustc-flags=-L {}/lib -l sodium", dst.display());
+    println!("cargo:rustc-link-lib=static=sodium");
+    println!("cargo:rustc-link-search=native={}/lib", dst.display());
     println!("cargo:root={}", dst.display());
-    println!("cargo:include={}/include", dst.display());
 }
 
 fn make() -> &'static str {
