@@ -1,15 +1,15 @@
 [package]
-name = "libsodium"
+name = "libsodium-ffi"
 version = "0.1.1"
 authors = ["Y. T. Chung <zonyitoo@gmail.com>"]
 links = "sodium"
 build = "build.rs"
 license = "MIT/ISC"
 repository = "https://github.com/zonyitoo/sodium-rs"
-description = "Native bindings to the libsodium library"
+description = "Native bindings (FFI) to the libsodium library"
 
 [lib]
-name = "libsodium"
+name = "libsodium_ffi"
 
 [build-dependencies]
 pkg-config = "0.3"
