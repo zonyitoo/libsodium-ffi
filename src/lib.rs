@@ -785,7 +785,7 @@ extern {
 
     pub fn crypto_stream_chacha20_ietf_xor_ic(c: *mut c_uchar, m: *const c_uchar,
                                               mlen: c_ulonglong,
-                                              n: *const c_uchar, ic: u32,
+                                              n: *const c_uchar, ic: uint32_t,
                                               k: *const c_uchar) -> c_int;
 
     // sodium/crypto_stream_salsa20.h
@@ -876,6 +876,49 @@ extern {
     pub fn sodium_version_string() -> *const c_char;
     pub fn sodium_library_version_major() -> c_int;
     pub fn sodium_library_version_minor() -> c_int;
+
+    // sodium/crypto_aead_chacha20poly1305.h
+    pub fn crypto_aead_chacha20poly1305_ietf_encrypt(c: *mut c_uchar,
+                                                     clen_p: *mut c_ulonglong,
+                                                     m: *const c_uchar,
+                                                     mlen: c_ulonglong,
+                                                     ad: *const c_uchar,
+                                                     adlen: c_ulonglong,
+                                                     nsec: *const c_uchar,
+                                                     npub: *const c_uchar,
+                                                     k: *const c_uchar) -> c_int;
+    pub fn crypto_aead_chacha20poly1305_ietf_decrypt(m: *mut c_uchar,
+                                                     mlen_p: *mut c_ulonglong,
+                                                     nsec: *mut c_uchar,
+                                                     c: *const c_uchar,
+                                                     clen: c_ulonglong,
+                                                     ad: *const c_uchar,
+                                                     adlen: c_ulonglong,
+                                                     npub: *const c_uchar,
+                                                     k: *const c_uchar) -> c_int;
+
+    // sodium/crypto_aead_xchacha20poly1305.h
+    pub fn crypto_aead_xchacha20poly1305_ietf_encrypt(c: *mut c_uchar,
+                                                      clen_p: *mut c_ulonglong,
+                                                      m: *const c_uchar,
+                                                      mlen: c_ulonglong,
+                                                      ad: *const c_uchar,
+                                                      adlen: c_ulonglong,
+                                                      nsec: *const c_uchar,
+                                                      npub: *const c_uchar,
+                                                      k: *const c_uchar) -> c_int;
+    pub fn crypto_aead_xchacha20poly1305_ietf_decrypt(m: *mut c_uchar,
+                                                      mlen_p: *mut c_ulonglong,
+                                                      nsec: *mut c_uchar,
+                                                      c: *const c_uchar,
+                                                      clen: c_ulonglong,
+                                                      ad: *const c_uchar,
+                                                      adlen: c_ulonglong,
+                                                      npub: *const c_uchar,
+                                                      k: *const c_uchar) -> c_int;
+
+    // sodium/utils.h
+    pub fn sodium_increment(n: *mut c_uchar, nlen: size_t);
 }
 
 // sodium/crypto_hash_sha256.h
