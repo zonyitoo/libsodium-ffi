@@ -567,6 +567,10 @@ extern {
                                              out: *mut c_uchar) -> c_int;
 
     // sodium/crypto_pwhash_scryptsalsa208sha256.h
+    pub fn crypto_pwhash_scryptsalsa208sha256_bytes_min() -> size_t;
+    pub fn crypto_pwhash_scryptsalsa208sha256_bytes_max() -> size_t;
+    pub fn crypto_pwhash_scryptsalsa208sha256_passwd_min() -> size_t;
+    pub fn crypto_pwhash_scryptsalsa208sha256_passwd_max() -> size_t;
     pub fn crypto_pwhash_scryptsalsa208sha256_saltbytes() -> size_t;
     pub fn crypto_pwhash_scryptsalsa208sha256_strbytes() -> size_t;
     pub fn crypto_pwhash_scryptsalsa208sha256_strprefix() -> *const c_char;
@@ -574,6 +578,10 @@ extern {
     pub fn crypto_pwhash_scryptsalsa208sha256_memlimit_interactive() -> size_t;
     pub fn crypto_pwhash_scryptsalsa208sha256_opslimit_sensitive() -> size_t;
     pub fn crypto_pwhash_scryptsalsa208sha256_memlimit_sensitive() -> size_t;
+    pub fn crypto_pwhash_scryptsalsa208sha256_opslimit_min() -> size_t;
+    pub fn crypto_pwhash_scryptsalsa208sha256_opslimit_max() -> size_t;
+    pub fn crypto_pwhash_scryptsalsa208sha256_memlimit_min() -> size_t;
+    pub fn crypto_pwhash_scryptsalsa208sha256_memlimit_max() -> size_t;
     pub fn crypto_pwhash_scryptsalsa208sha256(out: *mut c_char,
                                               outlen: c_ulonglong,
                                               passwd: *const c_char,
@@ -919,6 +927,110 @@ extern {
 
     // sodium/utils.h
     pub fn sodium_increment(n: *mut c_uchar, nlen: size_t);
+
+    // sodium/crypto_pwhash_argon2i.h
+    pub fn crypto_pwhash_argon2i_alg_argon2i13() -> c_int;
+    pub fn crypto_pwhash_argon2i_bytes_min() -> size_t;
+    pub fn crypto_pwhash_argon2i_bytes_max() -> size_t;
+    pub fn crypto_pwhash_argon2i_passwd_min() -> size_t;
+    pub fn crypto_pwhash_argon2i_passwd_max() -> size_t;
+    pub fn crypto_pwhash_argon2i_saltbytes() -> size_t;
+    pub fn crypto_pwhash_argon2i_strbytes() -> size_t;
+    pub fn crypto_pwhash_argon2i_strprefix() -> *const c_char;
+    pub fn crypto_pwhash_argon2i_opslimit_min() -> size_t;
+    pub fn crypto_pwhash_argon2i_opslimit_max() -> size_t;
+    pub fn crypto_pwhash_argon2i_memlimit_min() -> size_t;
+    pub fn crypto_pwhash_argon2i_memlimit_max() -> size_t;
+    pub fn crypto_pwhash_argon2i_opslimit_interactive() -> size_t;
+    pub fn crypto_pwhash_argon2i_memlimit_interactive() -> size_t;
+    pub fn crypto_pwhash_argon2i_opslimit_moderate() -> size_t;
+    pub fn crypto_pwhash_argon2i_memlimit_moderate() -> size_t;
+    pub fn crypto_pwhash_argon2i_opslimit_sensitive() -> size_t;
+    pub fn crypto_pwhash_argon2i_memlimit_sensitive() -> size_t;
+    pub fn crypto_pwhash_argon2i(out: *mut c_uchar,
+                                 outlen: c_ulonglong,
+                                 passwd: *const c_char,
+                                 passwdlen: c_ulonglong,
+                                 salt: *const c_uchar,
+                                 opslimit: c_ulonglong, memlimit: size_t,
+                                 alg: c_int) -> c_int;
+    pub fn crypto_pwhash_argon2i_str(out: *mut c_char,
+                                     passwd: *const c_char,
+                                     passwdlen: c_ulonglong,
+                                     opslimit: c_ulonglong, memlimit: size_t) -> c_int;
+    pub fn crypto_pwhash_argon2i_str_verify(_str: *const c_char,
+                                            passwd: *const c_char,
+                                            passwdlen: c_ulonglong) -> c_int;
+
+    // sodium/crypto_pwhash_argon2id.h
+    pub fn crypto_pwhash_argon2id_alg_argon2id13() -> c_int;
+    pub fn crypto_pwhash_argon2id_bytes_min() -> size_t;
+    pub fn crypto_pwhash_argon2id_bytes_max() -> size_t;
+    pub fn crypto_pwhash_argon2id_passwd_min() -> size_t;
+    pub fn crypto_pwhash_argon2id_passwd_max() -> size_t;
+    pub fn crypto_pwhash_argon2id_saltbytes() -> size_t;
+    pub fn crypto_pwhash_argon2id_strbytes() -> size_t;
+    pub fn crypto_pwhash_argon2id_strprefix() -> *const c_char;
+    pub fn crypto_pwhash_argon2id_opslimit_min() -> size_t;
+    pub fn crypto_pwhash_argon2id_opslimit_max() -> size_t;
+    pub fn crypto_pwhash_argon2id_memlimit_min() -> size_t;
+    pub fn crypto_pwhash_argon2id_memlimit_max() -> size_t;
+    pub fn crypto_pwhash_argon2id_opslimit_interactive() -> size_t;
+    pub fn crypto_pwhash_argon2id_memlimit_interactive() -> size_t;
+    pub fn crypto_pwhash_argon2id_opslimit_moderate() -> size_t;
+    pub fn crypto_pwhash_argon2id_memlimit_moderate() -> size_t;
+    pub fn crypto_pwhash_argon2id_opslimit_sensitive() -> size_t;
+    pub fn crypto_pwhash_argon2id_memlimit_sensitive() -> size_t;
+    pub fn crypto_pwhash_argon2id(out: *mut c_uchar,
+                                  outlen: c_ulonglong,
+                                  passwd: *const c_char,
+                                  passwdlen: c_ulonglong,
+                                  salt: *const c_uchar,
+                                  opslimit: c_ulonglong, memlimit: size_t,
+                                  alg: c_int) -> c_int;
+    pub fn crypto_pwhash_argon2id_str(out: *mut c_char,
+                                      passwd: *const c_char,
+                                      passwdlen: c_ulonglong,
+                                      opslimit: c_ulonglong, memlimit: size_t) -> c_int;
+    pub fn crypto_pwhash_argon2id_str_verify(_str: *const c_char,
+                                             passwd: *const c_uchar,
+                                             passwdlen: c_ulonglong) -> c_int;
+
+    // sodium/crypto_pwhash.h
+    pub fn crypto_pwhash_alg_argon2i13() -> c_int;
+    pub fn crypto_pwhash_alg_argon2id13() -> c_int;
+    pub fn crypto_pwhash_alg_default() -> c_int;
+    pub fn crypto_pwhash_bytes_min() -> size_t;
+    pub fn crypto_pwhash_bytes_max() -> size_t;
+    pub fn crypto_pwhash_passwd_min() -> size_t;
+    pub fn crypto_pwhash_passwd_max() -> size_t;
+    pub fn crypto_pwhash_saltbytes() -> size_t;
+    pub fn crypto_pwhash_strbytes() -> size_t;
+    pub fn crypto_pwhash_strprefix() -> *const c_char;
+    pub fn crypto_pwhash_opslimit_min() -> size_t;
+    pub fn crypto_pwhash_opslimit_max() -> size_t;
+    pub fn crypto_pwhash_memlimit_min() -> size_t;
+    pub fn crypto_pwhash_memlimit_max() -> size_t;
+    pub fn crypto_pwhash_opslimit_interactive() -> size_t;
+    pub fn crypto_pwhash_memlimit_interactive() -> size_t;
+    pub fn crypto_pwhash_opslimit_moderate() -> size_t;
+    pub fn crypto_pwhash_memlimit_moderate() -> size_t;
+    pub fn crypto_pwhash_opslimit_sensitive() -> size_t;
+    pub fn crypto_pwhash_memlimit_sensitive() -> size_t;
+    pub fn crypto_pwhash(out: *mut c_uchar, outlen: c_ulonglong,
+                         passwd: *const c_char, passwdlen: c_ulonglong,
+                         salt: *const c_uchar,
+                         opslimit: c_ulonglong, memlimit: size_t, alg: c_int) -> c_int;
+    pub fn crypto_pwhash_str(out: *mut c_char,
+                             passwd: *const c_char, passwdlen: c_ulonglong,
+                             opslimit: c_ulonglong, memlimit: size_t) -> c_int;
+    pub fn crypto_pwhash_str_alg(out: *mut c_char,
+                                 passwd: *const c_char, passwdlen: c_ulonglong,
+                                 opslimit: c_ulonglong, memlimit: size_t, alg: c_int) -> c_int;
+    pub fn crypto_pwhash_str_verify(_str: *const c_char,
+                                    passwd: *const c_char,
+                                    passwdlen: c_ulonglong) -> c_int;
+    pub fn crypto_pwhash_primitive() -> *const c_char;
 }
 
 // sodium/crypto_hash_sha256.h
