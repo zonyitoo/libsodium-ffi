@@ -180,11 +180,6 @@ pub const crypto_stream_KEYBYTES: size_t = crypto_stream_xsalsa20_KEYBYTES;
 pub const crypto_stream_NONCEBYTES: size_t = crypto_stream_xsalsa20_NONCEBYTES;
 pub const crypto_stream_PRIMITIVE: &'static str = "xsalsa20";
 
-// sodium/crypto_stream_aes128ctr.h
-pub const crypto_stream_aes128ctr_KEYBYTES: size_t = 16;
-pub const crypto_stream_aes128ctr_NONCEBYTES: size_t = 16;
-pub const crypto_stream_aes128ctr_BEFORENMBYTES: size_t = 1408;
-
 // sodium/crypto_stream_chacha20.h
 pub const crypto_stream_chacha20_KEYBYTES: size_t = 32;
 pub const crypto_stream_chacha20_NONCEBYTES: size_t = 8;
@@ -761,22 +756,6 @@ extern {
     pub fn crypto_stream_xor(c: *mut c_uchar, m: *const c_uchar,
                              mlen: c_ulonglong, n: *const c_uchar,
                              k: *const c_uchar) -> c_int;
-
-    // sodium/crypto_stream_aes128ctr.h
-    pub fn crypto_stream_aes128ctr_keybytes() -> size_t;
-    pub fn crypto_stream_aes128ctr_noncebytes() -> size_t;
-    pub fn crypto_stream_aes128ctr_beforenmbytes() -> size_t;
-    pub fn crypto_stream_aes128ctr(out: *mut c_uchar, outlen: c_ulonglong,
-                                   n: *const c_uchar, k: *const c_uchar) -> c_int;
-    pub fn crypto_stream_aes128ctr_xor(out: *mut c_uchar, in_: *const c_uchar,
-                                       inlen: c_ulonglong, n: *const c_uchar,
-                                       k: *const c_uchar) -> c_int;
-    pub fn crypto_stream_aes128ctr_beforenm(c: *mut c_uchar, k: *const c_uchar) -> c_int;
-    pub fn crypto_stream_aes128ctr_afternm(out: *mut c_uchar, len: c_ulonglong,
-                                           nounce: *const c_uchar, c: *const c_uchar) -> c_int;
-    pub fn crypto_stream_aes128ctr_xor_afternm(out: *mut c_uchar, in_: *const c_uchar,
-                                               len: c_ulonglong, nounce: *const c_uchar,
-                                               c: *const c_uchar) -> c_int;
 
     // sodium/crypto_stream_chacha20.h
     pub fn crypto_stream_chacha20_keybytes() -> size_t;
