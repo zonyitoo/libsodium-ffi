@@ -6,6 +6,10 @@ use std::env;
 use std::path::Path;
 
 fn main() {
+    println!("cargo:rerun-if-env-changed=SODIUM_LIB_DIR");
+    println!("cargo:rerun-if-env-changed=SODIUM_STATIC");
+    println!("cargo:rerun-if-env-changed=SODIUM_BUILD_STATIC");
+
     // Use library provided by environ
     if let Ok(lib_dir) = env::var("SODIUM_LIB_DIR") {
         println!("cargo:rustc-link-search=native={}", lib_dir);
