@@ -1,3 +1,4 @@
+extern crate cc;
 extern crate pkg_config;
 
 use std::fs;
@@ -26,15 +27,56 @@ fn main() {
         // Uses system-wide libsodium
         match pkg_config::find_library("libsodium") {
             Ok(..) => return,
-            Err(..) => {
-                panic!(
-                    "Missing libsodium library in your system, \
-                     try to use SODIUM_BUILD_STATIC=yes to build it from source"
-                )
-            }
+            Err(..) => panic!(
+                "Missing libsodium library in your system, \
+                 try to use SODIUM_BUILD_STATIC=yes to build it from source"
+            ),
         }
     }
 
+    build();
+}
+
+#[cfg(all(windows, not(target_env = "gnu")))]
+fn build() {
+    let platform = if cfg!(target_pointer_width = "32") {
+        "x32"
+    } else {
+        "x64"
+    };
+
+    let cargo_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let output_dir = env::var("OUT_DIR").unwrap();
+
+    let src = Path::new(&cargo_dir[..]);
+    let dst = Path::new(&output_dir[..]);
+    let solution_dir = src.join("libsodium");
+    println!("Solution Dir: {}", solution_dir.display());
+
+    let _ = fs::remove_dir_all(&dst);
+
+    let target = env::var("TARGET").expect("TARGET not found in environment");
+
+    let mut cmd =
+        cc::windows_registry::find(&target[..], "msbuild.exe").expect("Failed to find MSBuild.exe");
+    cmd.arg(&format!("/m:{}", env::var("NUM_JOBS").unwrap()))
+        .arg("/verbosity:minimal")
+        .arg("/p:Configuration=Release")
+        .arg(&format!("/p:OutDir={}\\", dst.display()))
+        .arg(&format!("/p:IntDir={}\\", dst.join("Intermediate").display()))
+        .arg(&format!("/p:Platform={}", platform))
+        .current_dir(&solution_dir)
+        .arg("libsodium.vcxproj");
+
+    run(&mut cmd);
+
+    println!("cargo:rustc-link-lib=static=libsodium");
+    println!("cargo:rustc-link-search=native={}", dst.display());
+    println!("cargo:root={}", dst.display());
+}
+
+#[cfg(any(unix, all(windows, target_env = "gnu")))]
+fn build() {
     // Build one by ourselves
     let cargo_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     let output_dir = env::var("OUT_DIR").unwrap();
@@ -45,10 +87,12 @@ fn main() {
 
     let root = src.join("libsodium");
 
-    run(Command::new("sh")
+    run(
+        Command::new("sh")
             .arg("-c")
             .arg(&root.join("autogen.sh"))
-            .current_dir(&root));
+            .current_dir(&root),
+    );
 
     let _ = fs::remove_dir_all(&dst.join("include"));
     let _ = fs::remove_dir_all(&dst.join("lib"));
@@ -56,8 +100,8 @@ fn main() {
     fs::create_dir(&dst.join("build")).unwrap();
 
     let mut config_opts = Vec::new();
-    config_opts.push(format!("{:?}", root.join("configure")));
-    config_opts.push(format!("--prefix={:?}", dst));
+    config_opts.push(format!("{}", root.join("configure").display()));
+    config_opts.push(format!("--prefix={:?}", dst.display()));
     config_opts.push("--disable-shared".to_string());
     config_opts.push("--enable-static=yes".to_string());
 
@@ -65,34 +109,46 @@ fn main() {
         config_opts.push("--disable-soname-versions".to_string());
     }
 
-    run(Command::new("sh")
+    run(
+        Command::new("sh")
             .arg("-c")
             .arg(&config_opts.join(" "))
-            .current_dir(&dst.join("build")));
+            .current_dir(&dst.join("build")),
+    );
 
-    run(Command::new(make())
+    run(
+        Command::new(make())
             .arg(&format!("-j{}", env::var("NUM_JOBS").unwrap()))
-            .current_dir(&dst.join("build")));
+            .current_dir(&dst.join("build")),
+    );
 
-    run(Command::new(make())
+    run(
+        Command::new(make())
             .arg(&format!("-j{}", env::var("NUM_JOBS").unwrap()))
             .arg("install")
-            .current_dir(&dst.join("build")));
+            .current_dir(&dst.join("build")),
+    );
 
     println!("cargo:rustc-link-lib=static=sodium");
     println!("cargo:rustc-link-search=native={}/lib", dst.display());
     println!("cargo:root={}", dst.display());
-}
 
-fn make() -> &'static str {
-    if cfg!(target_os = "freebsd") {"gmake"} else {"make"}
+    fn make() -> &'static str {
+        if cfg!(target_os = "freebsd") {
+            "gmake"
+        } else {
+            "make"
+        }
+    }
 }
 
 fn run(cmd: &mut Command) {
     println!("running: {:?}", cmd);
-    assert!(cmd.stdout(Stdio::inherit())
-               .stderr(Stdio::inherit())
-               .status()
-               .unwrap()
-               .success());
+    assert!(
+        cmd.stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
+            .status()
+            .unwrap()
+            .success()
+    );
 }
