@@ -63,7 +63,10 @@ fn build() {
         .arg("/verbosity:minimal")
         .arg("/p:Configuration=Release")
         .arg(&format!("/p:OutDir={}\\", dst.display()))
-        .arg(&format!("/p:IntDir={}\\", dst.join("Intermediate").display()))
+        .arg(&format!(
+            "/p:IntDir={}\\",
+            dst.join("Intermediate").display()
+        ))
         .arg(&format!("/p:Platform={}", platform))
         .current_dir(&solution_dir)
         .arg("libsodium.vcxproj");
@@ -87,46 +90,58 @@ fn build() {
 
     let root = src.join("libsodium");
 
-    run(
-        Command::new("sh")
-            .arg("-c")
-            .arg(&root.join("autogen.sh"))
-            .current_dir(&root),
-    );
+    let mut autogen_cmd = Command::new("sh");
+    autogen_cmd.arg("-c");
+
+    let mut ccmd = format!("{}", root.join("autogen.sh").display());
+    if cfg!(windows) {
+        ccmd = ccmd.replace("\\", "/");
+    }
+    autogen_cmd.arg(&ccmd);
+    run(autogen_cmd.current_dir(&root));
 
     let _ = fs::remove_dir_all(&dst.join("include"));
     let _ = fs::remove_dir_all(&dst.join("lib"));
-    let _ = fs::remove_dir_all(&dst.join("build"));
-    fs::create_dir(&dst.join("build")).unwrap();
 
-    let mut config_opts = Vec::new();
-    config_opts.push(format!("{}", root.join("configure").display()));
-    config_opts.push(format!("--prefix={:?}", dst.display()));
-    config_opts.push("--disable-shared".to_string());
-    config_opts.push("--enable-static=yes".to_string());
+    let build_dir = dst.join("build");
+    let _ = fs::remove_dir_all(&build_dir);
+    fs::create_dir(&build_dir).unwrap();
 
-    if target.contains("android") {
-        config_opts.push("--disable-soname-versions".to_string());
+    let mut configure_cmd = Command::new("sh");
+    configure_cmd.arg("-c");
+
+    let mut cmd_path = format!("{}", root.join("configure").display());
+    if cfg!(windows) {
+        cmd_path = cmd_path.replace("\\", "/");
     }
 
-    run(
-        Command::new("sh")
-            .arg("-c")
-            .arg(&config_opts.join(" "))
-            .current_dir(&dst.join("build")),
+    let mut dst_path = format!("{}", dst.display());
+    if cfg!(windows) {
+        dst_path = dst_path.replace("\\", "/");
+    }
+
+    let mut ccmd = format!(
+        "{} --prefix={} --disable-shared --enable-static=yes",
+        cmd_path,
+        dst_path
     );
+    if target.contains("android") {
+        ccmd += " --disable-soname-versions";
+    }
+    configure_cmd.arg(&ccmd);
+    run(configure_cmd.current_dir(&build_dir));
 
     run(
         Command::new(make())
             .arg(&format!("-j{}", env::var("NUM_JOBS").unwrap()))
-            .current_dir(&dst.join("build")),
+            .current_dir(&build_dir),
     );
 
     run(
         Command::new(make())
             .arg(&format!("-j{}", env::var("NUM_JOBS").unwrap()))
             .arg("install")
-            .current_dir(&dst.join("build")),
+            .current_dir(&build_dir),
     );
 
     println!("cargo:rustc-link-lib=static=sodium");

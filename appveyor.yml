@@ -10,6 +10,7 @@ environment:
         BITS: 32
         OPENSSL_VERSION: 1_1_0f
         MSYS2: 1
+        OPENSSL_DIR: C:\OpenSSL
         SODIUM_BUILD_STATIC: yes
 
 install:
