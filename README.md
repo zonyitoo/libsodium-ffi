@@ -1,6 +1,6 @@
 ## libsodium-sys
 
-[![Build Status](https://travis-ci.org/zonyitoo/libsodium-sys.svg)](https://travis-ci.org/zonyitoo/libsodium-sys)
+[![Build Status](https://travis-ci.org/zonyitoo/libsodium-ffi.svg?branch=master)](https://travis-ci.org/zonyitoo/libsodium-ffi)
 [![Build status](https://ci.appveyor.com/api/projects/status/em09bc2uktyvnf3h?svg=true)](https://ci.appveyor.com/project/zonyitoo/libsodium-ffi)
 
 Rust native binding to [libsodium](https://github.com/jedisct1/libsodium)
