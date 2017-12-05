@@ -6,12 +6,12 @@ environment:
         MSYS2: 1
         OPENSSL_DIR: C:\OpenSSL
         SODIUM_BUILD_STATIC: yes
-      - TARGET: i686-pc-windows-gnu
-        BITS: 32
-        OPENSSL_VERSION: 1_1_0f
-        MSYS2: 1
-        OPENSSL_DIR: C:\OpenSSL
-        SODIUM_BUILD_STATIC: yes
+      # - TARGET: i686-pc-windows-gnu
+      #   BITS: 32
+      #   OPENSSL_VERSION: 1_1_0f
+      #   MSYS2: 1
+      #   OPENSSL_DIR: C:\OpenSSL
+      #   SODIUM_BUILD_STATIC: yes
 
 install:
     - git submodule update --init --recursive
