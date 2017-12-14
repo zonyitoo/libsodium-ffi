@@ -2,16 +2,12 @@ environment:
     matrix:
       - TARGET: x86_64-pc-windows-msvc
         BITS: 64
-        OPENSSL_VERSION: 1_1_0f
         MSYS2: 1
-        OPENSSL_DIR: C:\OpenSSL
         SODIUM_BUILD_STATIC: yes
-      # - TARGET: i686-pc-windows-gnu
-      #   BITS: 32
-      #   OPENSSL_VERSION: 1_1_0f
-      #   MSYS2: 1
-      #   OPENSSL_DIR: C:\OpenSSL
-      #   SODIUM_BUILD_STATIC: yes
+      - TARGET: i686-pc-windows-gnu
+        BITS: 32
+        MSYS2: 1
+        SODIUM_BUILD_STATIC: yes
 
 install:
     - git submodule update --init --recursive
@@ -28,7 +24,7 @@ install:
 build: false
 
 test_script:
-    - cargo test -v --no-default-features --no-fail-fast
+    - cargo test -v --no-fail-fast
 
 cache:
   - target

@@ -1,10 +1,21 @@
 extern crate cc;
+#[cfg(windows)]
+extern crate flate2;
 extern crate pkg_config;
+#[macro_use]
+extern crate unwrap;
+#[cfg(windows)]
+extern crate zip;
+#[cfg(windows)]
+extern crate libc;
+#[cfg(windows)]
+extern crate tar;
 
-use std::fs;
+#[cfg(unix)]
 use std::process::{Command, Stdio};
 use std::env;
-use std::path::Path;
+
+const VERSION: &'static str = "1.0.16";
 
 fn main() {
     println!("cargo:rerun-if-env-changed=SODIUM_LIB_DIR");
@@ -34,69 +45,237 @@ fn main() {
         }
     }
 
+    println!("Building libsodium {} from source", VERSION);
+
     build();
 }
 
-#[cfg(all(windows, not(target_env = "gnu")))]
-fn build() {
-    let platform = if cfg!(target_pointer_width = "32") {
-        "x32"
-    } else {
-        "x64"
-    };
-
-    let cargo_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
-    let output_dir = env::var("OUT_DIR").unwrap();
-
-    let src = Path::new(&cargo_dir[..]);
-    let dst = Path::new(&output_dir[..]);
-    let solution_dir = src.join("libsodium");
-    println!("Solution Dir: {}", solution_dir.display());
-
-    let _ = fs::remove_dir_all(&dst);
-
-    let target = env::var("TARGET").expect("TARGET not found in environment");
-
-    let mut cmd =
-        cc::windows_registry::find(&target[..], "msbuild.exe").expect("Failed to find MSBuild.exe");
-    cmd.arg(&format!("/m:{}", env::var("NUM_JOBS").unwrap()))
-        .arg("/verbosity:minimal")
-        .arg("/p:Configuration=Release")
-        .arg(&format!("/p:OutDir={}\\", dst.display()))
-        .arg(&format!(
-            "/p:IntDir={}\\",
-            dst.join("Intermediate").display()
-        ))
-        .arg(&format!("/p:Platform={}", platform))
-        .current_dir(&solution_dir)
-        .arg("libsodium.vcxproj");
-
-    run(&mut cmd);
-
-    println!("cargo:rustc-link-lib=static=libsodium");
-    println!("cargo:rustc-link-search=native={}", dst.display());
-    println!("cargo:root={}", dst.display());
+#[cfg(windows)]
+fn get_install_dir() -> String {
+    use std::env;
+    unwrap!(env::var("OUT_DIR")) + "/installed"
 }
 
-#[cfg(any(unix, all(windows, target_env = "gnu")))]
+#[cfg(windows)]
+fn check_powershell_version() {
+    let mut check_ps_version_cmd = ::std::process::Command::new("powershell");
+    let check_ps_version_output = check_ps_version_cmd
+        .arg("-Command")
+        .arg("If ($PSVersionTable.PSVersion.Major -lt 4) { exit 1 }")
+        .output()
+        .unwrap_or_else(|error| {
+            panic!("Failed to run powershell command: {}", error);
+        });
+    if !check_ps_version_output.status.success() {
+        panic!(
+            "\n{:?}\n{}\n{}\nYou must have Powershell v4.0 or greater installed.\n\n",
+            check_ps_version_cmd,
+            String::from_utf8_lossy(&check_ps_version_output.stdout),
+            String::from_utf8_lossy(&check_ps_version_output.stderr)
+        );
+    }
+}
+
+#[cfg(windows)]
+fn download_compressed_file() -> String {
+    use std::process::Command;
+
+    let basename = "libsodium-".to_string() + VERSION;
+    let zip_filename = if cfg!(target_env = "msvc") {
+        basename.clone() + "-msvc.zip"
+    } else {
+        basename.clone() + "-mingw.tar.gz"
+    };
+    let url = "https://download.libsodium.org/libsodium/releases/".to_string() + &zip_filename;
+    let zip_path = get_install_dir() + "/" + &zip_filename;
+    let mut command = "([Net.ServicePointManager]::SecurityProtocol = 'Tls12') -and \
+                       ((New-Object System.Net.WebClient).DownloadFile(\""
+        .to_string() + &url + "\", \"" + &zip_path + "\"))";
+    let mut download_cmd = Command::new("powershell");
+    let mut download_output = download_cmd
+        .arg("-Command")
+        .arg(&command)
+        .output()
+        .unwrap_or_else(|error| {
+            panic!("Failed to run powershell download command: {}", error);
+        });
+    if download_output.status.success() {
+        return zip_path;
+    }
+
+    let fallback_url = "https://raw.githubusercontent.com/maidsafe/QA/master/appveyor/".to_string()
+        + &zip_filename;
+    println!(
+        "cargo:warning=Failed to download libsodium from {}.  Falling back to MaidSafe mirror \
+         at {}",
+        url,
+        fallback_url
+    );
+    command = "([Net.ServicePointManager]::SecurityProtocol = 'Tls12') -and \
+               ((New-Object System.Net.WebClient).DownloadFile(\""
+        .to_string() + &fallback_url + "\", \"" + &zip_path + "\"))";
+    download_cmd = Command::new("powershell");
+    download_output = download_cmd
+        .arg("-Command")
+        .arg(&command)
+        .output()
+        .unwrap_or_else(|error| {
+            panic!("Failed to run powershell download command: {}", error);
+        });
+    if !download_output.status.success() {
+        panic!(
+            "\n{:?}\n{}\n{}\n",
+            download_cmd,
+            String::from_utf8_lossy(&download_output.stdout),
+            String::from_utf8_lossy(&download_output.stderr)
+        );
+    }
+    zip_path
+}
+
+#[cfg(all(windows, target_env = "msvc"))]
 fn build() {
+    use libc::S_IFDIR;
+    use std::fs::{self, File};
+    use std::io::{Read, Write};
+    use std::path::Path;
+    use zip::ZipArchive;
+
+    check_powershell_version();
+
+    // Download zip file
+    let install_dir = get_install_dir();
+    let lib_install_dir = Path::new(&install_dir).join("lib");
+    unwrap!(fs::create_dir_all(&lib_install_dir));
+    let zip_path = download_compressed_file();
+
+    // Unpack the zip file
+    let zip_file = unwrap!(File::open(&zip_path));
+    let mut zip_archive = unwrap!(ZipArchive::new(zip_file));
+
+    // Extract just the appropriate version of libsodium.lib and headers to the install path.  For
+    // now, only handle MSVC 2015.
+    let arch_path = if cfg!(target_pointer_width = "32") {
+        Path::new("Win32")
+    } else if cfg!(target_pointer_width = "64") {
+        Path::new("x64")
+    } else {
+        panic!("target_pointer_width not 32 or 64")
+    };
+
+    let unpacked_lib = arch_path.join("Release/v140/static/libsodium.lib");
+    for i in 0..zip_archive.len() {
+        let mut entry = unwrap!(zip_archive.by_index(i));
+        let entry_name = entry.name().to_string();
+        let entry_path = Path::new(&entry_name);
+        let opt_install_path = if entry_path.starts_with("include") {
+            let is_dir = (unwrap!(entry.unix_mode()) & S_IFDIR as u32) != 0;
+            if is_dir {
+                let _ = fs::create_dir(&Path::new(&install_dir).join(entry_path));
+                None
+            } else {
+                Some(Path::new(&install_dir).join(entry_path))
+            }
+        } else if entry_path == unpacked_lib {
+            Some(lib_install_dir.join("libsodium.lib"))
+        } else {
+            None
+        };
+        if let Some(full_install_path) = opt_install_path {
+            let mut buffer = Vec::with_capacity(entry.size() as usize);
+            assert_eq!(entry.size(), unwrap!(entry.read_to_end(&mut buffer)) as u64);
+            let mut file = unwrap!(File::create(&full_install_path));
+            unwrap!(file.write_all(&buffer));
+        }
+    }
+
+    // Clean up
+    let _ = fs::remove_file(zip_path);
+
+    println!("cargo:rustc-link-lib=static=libsodium");
+    println!(
+        "cargo:rustc-link-search=native={}",
+        lib_install_dir.display()
+    );
+    println!("cargo:include={}/include", install_dir);
+}
+
+#[cfg(all(windows, not(target_env = "msvc")))]
+fn build() {
+    use std::fs::{self, File};
+    use std::path::Path;
+    use flate2::read::GzDecoder;
+    use tar::Archive;
+
+    check_powershell_version();
+
+    // Download gz tarball
+    let install_dir = get_install_dir();
+    let lib_install_dir = Path::new(&install_dir).join("lib");
+    unwrap!(fs::create_dir_all(&lib_install_dir));
+    let gz_path = download_compressed_file();
+
+    // Unpack the tarball
+    let gz_archive = unwrap!(File::open(&gz_path));
+    let gz_decoder = unwrap!(GzDecoder::new(gz_archive));
+    let mut archive = Archive::new(gz_decoder);
+
+    // Extract just the appropriate version of libsodium.a and headers to the install path
+    let arch_path = if cfg!(target_pointer_width = "32") {
+        Path::new("libsodium-win32")
+    } else if cfg!(target_pointer_width = "64") {
+        Path::new("libsodium-win64")
+    } else {
+        panic!("target_pointer_width not 32 or 64")
+    };
+
+    let unpacked_include = arch_path.join("include");
+    let unpacked_lib = arch_path.join("lib\\libsodium.a");
+    let entries = unwrap!(archive.entries());
+    for entry_result in entries {
+        let mut entry = unwrap!(entry_result);
+        let entry_path = unwrap!(entry.path()).to_path_buf();
+        let full_install_path = if entry_path.starts_with(&unpacked_include) {
+            let include_file = unwrap!(entry_path.strip_prefix(arch_path));
+            Path::new(&install_dir).join(include_file)
+        } else if entry_path == unpacked_lib {
+            lib_install_dir.join("libsodium.a")
+        } else {
+            continue;
+        };
+        unwrap!(entry.unpack(full_install_path));
+    }
+
+    // Clean up
+    let _ = fs::remove_file(gz_path);
+
+    println!("cargo:rustc-link-lib=static=sodium");
+    println!(
+        "cargo:rustc-link-search=native={}",
+        lib_install_dir.display()
+    );
+    println!("cargo:include={}/include", install_dir);
+}
+
+#[cfg(unix)]
+fn build() {
+    use std::fs;
+    use std::path::Path;
+
     // Build one by ourselves
-    let cargo_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
-    let output_dir = env::var("OUT_DIR").unwrap();
+    let cargo_dir = unwrap!(env::var("CARGO_MANIFEST_DIR"));
+    let output_dir = unwrap!(env::var("OUT_DIR"));
 
     let src = Path::new(&cargo_dir[..]);
     let dst = Path::new(&output_dir[..]);
-    let target = env::var("TARGET").unwrap();
+    let target = unwrap!(env::var("TARGET"));
 
     let root = src.join("libsodium");
 
     let mut autogen_cmd = Command::new("sh");
     autogen_cmd.arg("-c");
 
-    let mut ccmd = format!("{}", root.join("autogen.sh").display());
-    if cfg!(windows) {
-        ccmd = ccmd.replace("\\", "/");
-    }
+    let ccmd = format!("{}", root.join("autogen.sh").display());
     autogen_cmd.arg(&ccmd);
     run(autogen_cmd.current_dir(&root));
 
@@ -110,16 +289,8 @@ fn build() {
     let mut configure_cmd = Command::new("sh");
     configure_cmd.arg("-c");
 
-    let mut cmd_path = format!("{}", root.join("configure").display());
-    if cfg!(windows) {
-        cmd_path = cmd_path.replace("\\", "/");
-    }
-
-    let mut dst_path = format!("{}", dst.display());
-    if cfg!(windows) {
-        dst_path = dst_path.replace("\\", "/");
-    }
-
+    let cmd_path = format!("{}", root.join("configure").display());
+    let dst_path = format!("{}", dst.display());
     let mut ccmd = format!(
         "{} --prefix={} --disable-shared --enable-static=yes",
         cmd_path,
@@ -157,13 +328,14 @@ fn build() {
     }
 }
 
+#[cfg(unix)]
 fn run(cmd: &mut Command) {
     println!("running: {:?}", cmd);
     assert!(
-        cmd.stdout(Stdio::inherit())
-            .stderr(Stdio::inherit())
-            .status()
-            .unwrap()
-            .success()
+        unwrap!(
+            cmd.stdout(Stdio::inherit())
+                .stderr(Stdio::inherit())
+                .status()
+        ).success()
     );
 }
