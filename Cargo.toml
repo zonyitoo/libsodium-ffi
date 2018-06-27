@@ -12,6 +12,7 @@ description = "Native bindings (FFI) to the libsodium library"
 name = "libsodium_ffi"
 
 [build-dependencies]
+vcpkg = "0.2"
 pkg-config = "0.3"
 cc = "1"
 flate2 = "0.2"

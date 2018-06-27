@@ -5,15 +5,17 @@ extern crate pkg_config;
 #[macro_use]
 extern crate unwrap;
 #[cfg(windows)]
-extern crate zip;
-#[cfg(windows)]
 extern crate libc;
 #[cfg(windows)]
 extern crate tar;
+#[cfg(windows)]
+extern crate vcpkg;
+#[cfg(windows)]
+extern crate zip;
 
+use std::env;
 #[cfg(unix)]
 use std::process::{Command, Stdio};
-use std::env;
 
 const VERSION: &'static str = "1.0.16";
 
@@ -21,6 +23,10 @@ fn main() {
     println!("cargo:rerun-if-env-changed=SODIUM_LIB_DIR");
     println!("cargo:rerun-if-env-changed=SODIUM_STATIC");
     println!("cargo:rerun-if-env-changed=SODIUM_BUILD_STATIC");
+
+    if probe_libsodium_vcpkg() {
+        return;
+    }
 
     // Use library provided by environ
     if let Ok(lib_dir) = env::var("SODIUM_LIB_DIR") {
@@ -48,6 +54,16 @@ fn main() {
     println!("Building libsodium {} from source", VERSION);
 
     build();
+}
+
+#[cfg(windows)]
+fn probe_libsodium_vcpkg() -> bool {
+    vcpkg::probe_package("libsodium").is_ok()
+}
+
+#[cfg(not(windows))]
+fn probe_libsodium_vcpkg() -> bool {
+    false
 }
 
 #[cfg(windows)]
@@ -108,8 +124,7 @@ fn download_compressed_file() -> String {
     println!(
         "cargo:warning=Failed to download libsodium from {}.  Falling back to MaidSafe mirror \
          at {}",
-        url,
-        fallback_url
+        url, fallback_url
     );
     command = "([Net.ServicePointManager]::SecurityProtocol = 'Tls12') -and \
                ((New-Object System.Net.WebClient).DownloadFile(\""
@@ -202,9 +217,9 @@ fn build() {
 
 #[cfg(all(windows, not(target_env = "msvc")))]
 fn build() {
+    use flate2::read::GzDecoder;
     use std::fs::{self, File};
     use std::path::Path;
-    use flate2::read::GzDecoder;
     use tar::Archive;
 
     check_powershell_version();
@@ -293,8 +308,7 @@ fn build() {
     let dst_path = format!("{}", dst.display());
     let mut ccmd = format!(
         "{} --prefix={} --disable-shared --enable-static=yes",
-        cmd_path,
-        dst_path
+        cmd_path, dst_path
     );
     if target.contains("android") {
         ccmd += " --disable-soname-versions";
@@ -302,18 +316,14 @@ fn build() {
     configure_cmd.arg(&ccmd);
     run(configure_cmd.current_dir(&build_dir));
 
-    run(
-        Command::new(make())
-            .arg(&format!("-j{}", env::var("NUM_JOBS").unwrap()))
-            .current_dir(&build_dir),
-    );
+    run(Command::new(make())
+        .arg(&format!("-j{}", env::var("NUM_JOBS").unwrap()))
+        .current_dir(&build_dir));
 
-    run(
-        Command::new(make())
-            .arg(&format!("-j{}", env::var("NUM_JOBS").unwrap()))
-            .arg("install")
-            .current_dir(&build_dir),
-    );
+    run(Command::new(make())
+        .arg(&format!("-j{}", env::var("NUM_JOBS").unwrap()))
+        .arg("install")
+        .current_dir(&build_dir));
 
     println!("cargo:rustc-link-lib=static=sodium");
     println!("cargo:rustc-link-search=native={}/lib", dst.display());
