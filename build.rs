@@ -5,8 +5,6 @@ extern crate pkg_config;
 #[macro_use]
 extern crate unwrap;
 #[cfg(windows)]
-extern crate libc;
-#[cfg(windows)]
 extern crate tar;
 #[cfg(windows)]
 extern crate vcpkg;
@@ -150,7 +148,7 @@ fn download_compressed_file() -> String {
 
 #[cfg(all(windows, target_env = "msvc"))]
 fn build() {
-    use libc::S_IFDIR;
+    const S_IFDIR: ::std::os::raw::c_int = 16384;
     use std::fs::{self, File};
     use std::io::{Read, Write};
     use std::path::Path;
