@@ -17,6 +17,11 @@ use std::process::{Command, Stdio};
 
 const VERSION: &'static str = "1.0.16";
 
+#[cfg(target_env = "msvc")]
+const SODIUM_LINK_NAME: &str = "libsodium";
+#[cfg(not(target_env = "msvc"))]
+const SODIUM_LINK_NAME: &str = "sodium";
+
 fn main() {
     println!("cargo:rerun-if-env-changed=SODIUM_LIB_DIR");
     println!("cargo:rerun-if-env-changed=SODIUM_STATIC");
@@ -34,7 +39,7 @@ fn main() {
             Some(_) => "static",
             None => "dylib",
         };
-        println!("cargo:rustc-link-lib={0}=sodium", mode);
+        println!("cargo:rustc-link-lib={}={}", mode, SODIUM_LINK_NAME);
         return;
     }
 
