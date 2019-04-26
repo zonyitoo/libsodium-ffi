@@ -15,7 +15,7 @@ use std::env;
 #[cfg(unix)]
 use std::process::{Command, Stdio};
 
-const VERSION: &'static str = "1.0.16";
+const VERSION: &'static str = "1.0.17";
 
 #[cfg(target_env = "msvc")]
 const SODIUM_LINK_NAME: &str = "libsodium";
