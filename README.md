@@ -1,4 +1,4 @@
-## libsodium-sys
+## libsodium-ffi
 
 [![Build Status](https://travis-ci.org/zonyitoo/libsodium-ffi.svg?branch=master)](https://travis-ci.org/zonyitoo/libsodium-ffi)
 [![Build status](https://ci.appveyor.com/api/projects/status/em09bc2uktyvnf3h?svg=true)](https://ci.appveyor.com/project/zonyitoo/libsodium-ffi)
