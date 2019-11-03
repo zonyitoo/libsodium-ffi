@@ -1,12 +1,13 @@
 [package]
 name = "libsodium-ffi"
-version = "0.1.17"
+version = "0.2.0"
 authors = ["Y. T. Chung <zonyitoo@gmail.com>"]
 links = "sodium"
 build = "build.rs"
 license = "MIT/ISC"
 repository = "https://github.com/zonyitoo/libsodium-sys"
 description = "Native bindings (FFI) to the libsodium library"
+edition = "2018"
 
 [lib]
 name = "libsodium_ffi"
@@ -19,3 +20,4 @@ flate2 = "0.2"
 tar = "0.4"
 zip = "0.2"
 unwrap = "1.1"
+bindgen = "0.51"

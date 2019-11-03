@@ -4,6 +4,7 @@ extern crate flate2;
 extern crate pkg_config;
 #[macro_use]
 extern crate unwrap;
+extern crate bindgen;
 #[cfg(windows)]
 extern crate tar;
 #[cfg(windows)]
@@ -12,10 +13,11 @@ extern crate vcpkg;
 extern crate zip;
 
 use std::env;
+use std::path::PathBuf;
 #[cfg(unix)]
 use std::process::{Command, Stdio};
 
-const VERSION: &'static str = "1.0.17";
+const VERSION: &'static str = "1.0.18";
 
 #[cfg(target_env = "msvc")]
 const SODIUM_LINK_NAME: &str = "libsodium";
@@ -23,6 +25,25 @@ const SODIUM_LINK_NAME: &str = "libsodium";
 const SODIUM_LINK_NAME: &str = "sodium";
 
 fn main() {
+    build_libsodium();
+    generate_bindings();
+}
+
+fn generate_bindings() {
+    println!("cargo:rerun-if-changed=./libsodium/src/libsodium/include/sodium.h");
+
+    let bindings = bindgen::Builder::default()
+        .header("./libsodium/src/libsodium/include/sodium.h")
+        .generate()
+        .expect("Unable to generate bindings");
+
+    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+    bindings
+        .write_to_file(out_path.join("bindings.rs"))
+        .expect("Couldn't write bindings.rs");
+}
+
+fn build_libsodium() {
     println!("cargo:rerun-if-env-changed=SODIUM_LIB_DIR");
     println!("cargo:rerun-if-env-changed=SODIUM_STATIC");
     println!("cargo:rerun-if-env-changed=SODIUM_BUILD_STATIC");
@@ -99,19 +120,23 @@ fn check_powershell_version() {
 fn download_compressed_file() -> String {
     use std::process::Command;
 
-    let basename = "libsodium-".to_string() + VERSION;
+    let basename = format!("libsodium-", VERSION);
     let zip_filename = if cfg!(target_env = "msvc") {
-        basename.clone() + "-msvc.zip"
+        format!("{}-msvc.zip", basename);
     } else {
-        basename.clone() + "-mingw.tar.gz"
+        format!("{}-mingw.tar.gz")
     };
-    let url = "https://download.libsodium.org/libsodium/releases/".to_string() + &zip_filename;
-    let zip_path = get_install_dir() + "/" + &zip_filename;
-    let mut command = "([Net.ServicePointManager]::SecurityProtocol = 'Tls12') -and \
-                       ((New-Object System.Net.WebClient).DownloadFile(\""
-        .to_string() + &url + "\", \"" + &zip_path + "\"))";
-    let mut download_cmd = Command::new("powershell");
-    let mut download_output = download_cmd
+    let url = format!(
+        "https://download.libsodium.org/libsodium/releases/{}",
+        zip_filename
+    );
+    let zip_path = format!("{}/{}", get_install_dir(), zip_filename);
+    let command = format!(
+        "([Net.ServicePointManager]::SecurityProtocol = 'Tls12') -and ((New-Object System.Net.WebClient).DownloadFile(\"{}\", \"{}\"))",
+        url, zip_path
+    );
+    let download_cmd = Command::new("powershell");
+    let download_output = download_cmd
         .arg("-Command")
         .arg(&command)
         .output()
@@ -122,18 +147,22 @@ fn download_compressed_file() -> String {
         return zip_path;
     }
 
-    let fallback_url = "https://raw.githubusercontent.com/maidsafe/QA/master/appveyor/".to_string()
-        + &zip_filename;
+    let fallback_url = format!(
+        "https://raw.githubusercontent.com/maidsafe/QA/master/appveyor/{}",
+        zip_filename
+    );
     println!(
-        "cargo:warning=Failed to download libsodium from {}.  Falling back to MaidSafe mirror \
-         at {}",
+        "cargo:warning=Failed to download libsodium from {}. Falling back to MaidSafe mirror at {}",
         url, fallback_url
     );
-    command = "([Net.ServicePointManager]::SecurityProtocol = 'Tls12') -and \
-               ((New-Object System.Net.WebClient).DownloadFile(\""
-        .to_string() + &fallback_url + "\", \"" + &zip_path + "\"))";
-    download_cmd = Command::new("powershell");
-    download_output = download_cmd
+
+    let command = format!(
+        "([Net.ServicePointManager]::SecurityProtocol = 'Tls12') -and \
+         ((New-Object System.Net.WebClient).DownloadFile(\"{}\", \"{}\"))",
+        fallback_url, zip_path
+    );
+    let download_cmd = Command::new("powershell");
+    let download_output = download_cmd
         .arg("-Command")
         .arg(&command)
         .output()
@@ -344,11 +373,9 @@ fn build() {
 #[cfg(unix)]
 fn run(cmd: &mut Command) {
     println!("running: {:?}", cmd);
-    assert!(
-        unwrap!(
-            cmd.stdout(Stdio::inherit())
-                .stderr(Stdio::inherit())
-                .status()
-        ).success()
-    );
+    assert!(unwrap!(cmd
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .status())
+    .success());
 }
