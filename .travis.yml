@@ -1,8 +1,26 @@
 language: rust
-rust:
-    - stable
-    - beta
-    - nightly
+matrix:
+    include:
+        - os: windows
+          rust: stable
+        - os: windows
+          rust: beta
+        - os: windows
+          rust: nightly
+
+        - os: osx
+          rust: stable
+        - os: osx
+          rust: beta
+        - os: osx
+          rust: nightly
+
+        - os: linux
+          rust: stable
+        - os: linux
+          rust: beta
+        - os: linux
+          rust: nightly
 
 env:
     - SODIUM_BUILD_STATIC=yes
