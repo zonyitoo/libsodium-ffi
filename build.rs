@@ -92,7 +92,6 @@ fn probe_libsodium_vcpkg() -> bool {
 
 #[cfg(windows)]
 fn get_install_dir() -> String {
-    use std::env;
     unwrap!(env::var("OUT_DIR")) + "/installed"
 }
 
@@ -120,11 +119,11 @@ fn check_powershell_version() {
 fn download_compressed_file() -> String {
     use std::process::Command;
 
-    let basename = format!("libsodium-", VERSION);
+    let basename = format!("libsodium-{}", VERSION);
     let zip_filename = if cfg!(target_env = "msvc") {
-        format!("{}-msvc.zip", basename);
+        format!("{}-msvc.zip", basename)
     } else {
-        format!("{}-mingw.tar.gz")
+        format!("{}-mingw.tar.gz", basename)
     };
     let url = format!(
         "https://download.libsodium.org/libsodium/releases/{}",
@@ -135,7 +134,7 @@ fn download_compressed_file() -> String {
         "([Net.ServicePointManager]::SecurityProtocol = 'Tls12') -and ((New-Object System.Net.WebClient).DownloadFile(\"{}\", \"{}\"))",
         url, zip_path
     );
-    let download_cmd = Command::new("powershell");
+    let mut download_cmd = Command::new("powershell");
     let download_output = download_cmd
         .arg("-Command")
         .arg(&command)
@@ -161,7 +160,7 @@ fn download_compressed_file() -> String {
          ((New-Object System.Net.WebClient).DownloadFile(\"{}\", \"{}\"))",
         fallback_url, zip_path
     );
-    let download_cmd = Command::new("powershell");
+    let mut download_cmd = Command::new("powershell");
     let download_output = download_cmd
         .arg("-Command")
         .arg(&command)
