@@ -29,9 +29,9 @@ fn main() {
 }
 
 fn generate_bindings(include_dirs: &[PathBuf]) {
-    let mut builder = bindgen::Builder::default().header("./sodium_wrapper.h");
+    let mut builder = bindgen::Builder::default().header("sodium_wrapper.h");
     for p in include_dirs {
-        builder = builder.clang_arg(format!("-I{}", p.to_str().unwrap()));
+        builder = builder.clang_arg(format!("-I{}", p.display()));
     }
     let bindings = builder.generate().expect("Unable to generate bindings");
 
@@ -77,8 +77,9 @@ fn build_libsodium() {
 
         build();
 
-        let include_dir = format!("{}/include", unwrap!(env::var("OUT_DIR")));
-        generate_bindings(&vec![PathBuf::from(include_dir)]);
+        let mut include_dir = PathBuf::from(unwrap!(env::var("OUT_DIR")));
+        include_dir.push("include");
+        generate_bindings(&vec![include_dir]);
     } else {
         // Uses system-wide libsodium
         match pkg_config::find_library("libsodium") {
@@ -103,8 +104,8 @@ fn probe_libsodium_vcpkg() -> bool {
 }
 
 #[cfg(windows)]
-fn get_install_dir() -> String {
-    unwrap!(env::var("OUT_DIR"))
+fn get_install_dir() -> PathBuf {
+    PathBuf::from(unwrap!(env::var("OUT_DIR")))
 }
 
 #[cfg(windows)]
@@ -128,7 +129,7 @@ fn check_powershell_version() {
 }
 
 #[cfg(windows)]
-fn download_compressed_file() -> String {
+fn download_compressed_file() -> PathBuf {
     use std::process::Command;
 
     let basename = format!("libsodium-{}", VERSION);
@@ -141,10 +142,11 @@ fn download_compressed_file() -> String {
         "https://download.libsodium.org/libsodium/releases/{}",
         zip_filename
     );
-    let zip_path = format!("{}/{}", get_install_dir(), zip_filename);
+    let mut zip_path = get_install_dir();
+    zip_path.push(&zip_filename);
     let command = format!(
         "([Net.ServicePointManager]::SecurityProtocol = 'Tls12') -and ((New-Object System.Net.WebClient).DownloadFile(\"{}\", \"{}\"))",
-        url, zip_path
+        url, zip_path.display()
     );
     let mut download_cmd = Command::new("powershell");
     let download_output = download_cmd
@@ -169,7 +171,7 @@ fn download_compressed_file() -> String {
 
     let command = format!(
         "([Net.ServicePointManager]::SecurityProtocol = 'Tls12') -and ((New-Object System.Net.WebClient).DownloadFile(\"{}\", \"{}\"))",
-        fallback_url, zip_path
+        fallback_url, zip_path.display()
     );
     let mut download_cmd = Command::new("powershell");
     let download_output = download_cmd
@@ -202,7 +204,8 @@ fn build() {
 
     // Download zip file
     let install_dir = get_install_dir();
-    let lib_install_dir = Path::new(&install_dir).join("lib");
+    let lib_install_dir = install_dir.join("lib");
+    let include_install_dir = install_dir.join("include");
     unwrap!(fs::create_dir_all(&lib_install_dir));
     let zip_path = download_compressed_file();
 
@@ -226,12 +229,13 @@ fn build() {
         let entry_name = entry.name().to_string();
         let entry_path = Path::new(&entry_name);
         let opt_install_path = if entry_path.starts_with("include") {
+            println!("Unpacking headers {}", entry_path.display());
             let is_dir = (unwrap!(entry.unix_mode()) & S_IFDIR as u32) != 0;
             if is_dir {
-                let _ = fs::create_dir(&Path::new(&install_dir).join(entry_path));
+                let _ = fs::create_dir(&install_dir.join(entry_path));
                 None
             } else {
-                Some(Path::new(&install_dir).join(entry_path))
+                Some(install_dir.join(entry_path))
             }
         } else if entry_path == unpacked_lib {
             Some(lib_install_dir.join("libsodium.lib"))
@@ -254,7 +258,7 @@ fn build() {
         "cargo:rustc-link-search=native={}",
         lib_install_dir.display()
     );
-    println!("cargo:include={}/include", install_dir);
+    println!("cargo:include={}", include_install_dir.display());
 }
 
 #[cfg(all(windows, not(target_env = "msvc")))]
@@ -268,7 +272,8 @@ fn build() {
 
     // Download gz tarball
     let install_dir = get_install_dir();
-    let lib_install_dir = Path::new(&install_dir).join("lib");
+    let lib_install_dir = install_dir.join("lib");
+    let include_install_dir = install_dir.join("include");
     unwrap!(fs::create_dir_all(&lib_install_dir));
     let gz_path = download_compressed_file();
 
@@ -294,7 +299,12 @@ fn build() {
         let entry_path = unwrap!(entry.path()).to_path_buf();
         let full_install_path = if entry_path.starts_with(&unpacked_include) {
             let include_file = unwrap!(entry_path.strip_prefix(arch_path));
-            Path::new(&install_dir).join(include_file)
+            println!(
+                "Unpacking include file {} to {}",
+                entry_path.display(),
+                include_file.display()
+            );
+            install_dir.join(include_file)
         } else if entry_path == unpacked_lib {
             lib_install_dir.join("libsodium.a")
         } else {
@@ -311,7 +321,7 @@ fn build() {
         "cargo:rustc-link-search=native={}",
         lib_install_dir.display()
     );
-    println!("cargo:include={}/include", install_dir);
+    println!("cargo:include={}", include_install_dir.display());
 }
 
 #[cfg(unix)]
