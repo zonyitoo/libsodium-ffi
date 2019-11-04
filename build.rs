@@ -26,16 +26,14 @@ const SODIUM_LINK_NAME: &str = "sodium";
 
 fn main() {
     build_libsodium();
-    generate_bindings();
 }
 
-fn generate_bindings() {
-    println!("cargo:rerun-if-changed=./libsodium/src/libsodium/include/sodium.h");
-
-    let bindings = bindgen::Builder::default()
-        .header("./libsodium/src/libsodium/include/sodium.h")
-        .generate()
-        .expect("Unable to generate bindings");
+fn generate_bindings(include_dirs: &[PathBuf]) {
+    let mut builder = bindgen::Builder::default().header("./sodium_wrapper.h");
+    for p in include_dirs {
+        builder = builder.clang_arg(format!("-I{}", p.to_str().unwrap()));
+    }
+    let bindings = builder.generate().expect("Unable to generate bindings");
 
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
     bindings
@@ -45,6 +43,7 @@ fn generate_bindings() {
 
 fn build_libsodium() {
     println!("cargo:rerun-if-env-changed=SODIUM_LIB_DIR");
+    println!("cargo:rerun-if-env-changed=SODIUM_INCLUDE_DIR");
     println!("cargo:rerun-if-env-changed=SODIUM_STATIC");
     println!("cargo:rerun-if-env-changed=SODIUM_BUILD_STATIC");
 
@@ -61,23 +60,36 @@ fn build_libsodium() {
             None => "dylib",
         };
         println!("cargo:rustc-link-lib={}={}", mode, SODIUM_LINK_NAME);
+
+        match env::var("SODIUM_INCLUDE_DIR") {
+            Err(..) => panic!("You have to provide SODIUM_LIB_DIR and SODIUM_INCLUDE_DIR together"),
+            Ok(include_dir) => {
+                generate_bindings(&vec![PathBuf::from(include_dir)]);
+            }
+        }
+
         return;
     }
 
-    if let None = env::var_os("SODIUM_BUILD_STATIC") {
+    // Build from source
+    if let Some(..) = env::var_os("SODIUM_BUILD_STATIC") {
+        println!("Building libsodium {} from source", VERSION);
+
+        build();
+
+        let include_dir = format!("{}/include", unwrap!(env::var("OUT_DIR")));
+        generate_bindings(&vec![PathBuf::from(include_dir)]);
+    } else {
         // Uses system-wide libsodium
         match pkg_config::find_library("libsodium") {
-            Ok(..) => return,
+            Ok(lib) => {
+                generate_bindings(&lib.include_paths);
+            }
             Err(..) => panic!(
-                "Missing libsodium library in your system, \
-                 try to use SODIUM_BUILD_STATIC=yes to build it from source"
+                "Missing libsodium library in your system, try to use SODIUM_BUILD_STATIC=yes to build it from source"
             ),
         }
     }
-
-    println!("Building libsodium {} from source", VERSION);
-
-    build();
 }
 
 #[cfg(windows)]
@@ -92,7 +104,7 @@ fn probe_libsodium_vcpkg() -> bool {
 
 #[cfg(windows)]
 fn get_install_dir() -> String {
-    unwrap!(env::var("OUT_DIR")) + "/installed"
+    format!("{}/installed", unwrap!(env::var("OUT_DIR")))
 }
 
 #[cfg(windows)]
@@ -156,8 +168,7 @@ fn download_compressed_file() -> String {
     );
 
     let command = format!(
-        "([Net.ServicePointManager]::SecurityProtocol = 'Tls12') -and \
-         ((New-Object System.Net.WebClient).DownloadFile(\"{}\", \"{}\"))",
+        "([Net.ServicePointManager]::SecurityProtocol = 'Tls12') -and ((New-Object System.Net.WebClient).DownloadFile(\"{}\", \"{}\"))",
         fallback_url, zip_path
     );
     let mut download_cmd = Command::new("powershell");
