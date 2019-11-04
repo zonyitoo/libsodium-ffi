@@ -260,13 +260,13 @@ fn build() {
         // 2. include path
         else if entry_path.starts_with(unpacked_include) {
             // Copy them into include_install_dir
-            let relative_path = entry_path.strip_prefix(&unpacked_include);
+            let relative_path = unwrap!(entry_path.strip_prefix(&unpacked_include));
             let include_file_path = include_install_dir.join(&relative_path);
             if entry.is_dir() {
                 let _ = fs::create_dir(&include_file_path);
             } else {
                 let mut include_file = unwrap!(File::create(&include_file_path));
-                unwrap!(copy_file(&mut entry, &mut lib_file));
+                unwrap!(copy_file(&mut entry, &mut include_file));
             }
         }
     }
