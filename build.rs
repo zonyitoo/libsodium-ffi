@@ -194,9 +194,8 @@ fn download_compressed_file() -> PathBuf {
 
 #[cfg(all(windows, target_env = "msvc"))]
 fn build() {
-    const S_IFDIR: ::std::os::raw::c_int = 16384;
     use std::fs::{self, File};
-    use std::io::{Read, Write};
+    use std::io::{self, Read, Write};
     use std::path::Path;
     use zip::ZipArchive;
 
@@ -206,7 +205,12 @@ fn build() {
     let install_dir = get_install_dir();
     let lib_install_dir = install_dir.join("lib");
     let include_install_dir = install_dir.join("include");
+
+    // Create out/lib & out/include
     unwrap!(fs::create_dir_all(&lib_install_dir));
+    unwrap!(fs::create_dir_all(&include_install_dir));
+
+    // Download pre-built library
     let zip_path = download_compressed_file();
 
     // Unpack the zip file
@@ -216,38 +220,54 @@ fn build() {
     // Extract just the appropriate version of libsodium.lib and headers to the install path.  For
     // now, only handle MSVC 2015.
     let arch_path = if cfg!(target_pointer_width = "32") {
-        Path::new("Win32")
+        Path::new("libsodium/Win32")
     } else if cfg!(target_pointer_width = "64") {
-        Path::new("x64")
+        Path::new("libsodium/x64")
     } else {
         panic!("target_pointer_width not 32 or 64")
     };
 
+    // The library path inside the archive
     let unpacked_lib = arch_path.join("Release/v140/static/libsodium.lib");
+
+    // Include path prefix
+    let unpacked_include = Path::new("libsodium/include");
+
+    fn copy_file<R: Read, W: Write>(r: &mut R, w: &mut W) -> io::Result<()> {
+        let mut buf = [0u8; 10240];
+        loop {
+            let n = r.read(&mut buf)?;
+            if n == 0 {
+                break;
+            }
+            w.write_all(&buf[..n])?;
+        }
+        Ok(())
+    }
+
     for i in 0..zip_archive.len() {
         let mut entry = unwrap!(zip_archive.by_index(i));
         let entry_name = entry.name();
         let entry_path = Path::new(entry_name);
-        println!("Unpacking zipped file {}", entry_path.display());
-        let opt_install_path = if entry_path.starts_with("include") {
-            println!("Unpacking headers {}", entry_path.display());
-            let is_dir = (unwrap!(entry.unix_mode()) & S_IFDIR as u32) != 0;
-            if is_dir {
-                let _ = fs::create_dir(&install_dir.join(entry_path));
-                None
+
+        // 1. Deal with library
+        if entry_path == unpacked_lib {
+            // Write to lib_install_dir
+            let lib_file_path = lib_install_dir.join("libsodium.lib");
+            let mut lib_file = unwrap!(File::create(&lib_file_path));
+            unwrap!(copy_file(&mut entry, &mut lib_file));
+        }
+        // 2. include path
+        else if entry_path.starts_with(unpacked_include) {
+            // Copy them into include_install_dir
+            let relative_path = entry_path.strip_prefix(&unpacked_include);
+            let include_file_path = include_install_dir.join(&relative_path);
+            if entry.is_dir() {
+                let _ = fs::create_dir(&include_file_path);
             } else {
-                Some(install_dir.join(entry_path))
+                let mut include_file = unwrap!(File::create(&include_file_path));
+                unwrap!(copy_file(&mut entry, &mut lib_file));
             }
-        } else if entry_path == unpacked_lib {
-            Some(lib_install_dir.join("libsodium.lib"))
-        } else {
-            None
-        };
-        if let Some(full_install_path) = opt_install_path {
-            let mut buffer = Vec::with_capacity(entry.size() as usize);
-            assert_eq!(entry.size(), unwrap!(entry.read_to_end(&mut buffer)) as u64);
-            let mut file = unwrap!(File::create(&full_install_path));
-            unwrap!(file.write_all(&buffer));
         }
     }
 
@@ -275,7 +295,12 @@ fn build() {
     let install_dir = get_install_dir();
     let lib_install_dir = install_dir.join("lib");
     let include_install_dir = install_dir.join("include");
+
+    // Create out/lib & out/include
     unwrap!(fs::create_dir_all(&lib_install_dir));
+    unwrap!(fs::create_dir_all(&include_install_dir));
+
+    // Download pre-built library
     let gz_path = download_compressed_file();
 
     // Unpack the tarball
@@ -294,25 +319,22 @@ fn build() {
 
     let unpacked_include = arch_path.join("include");
     let unpacked_lib = arch_path.join("lib\\libsodium.a");
-    let entries = unwrap!(archive.entries());
-    for entry_result in entries {
+
+    for entry_result in unwrap!(archive.entries()) {
         let mut entry = unwrap!(entry_result);
         let entry_path = unwrap!(entry.path()).to_path_buf();
-        println!("Unpacking zipped file {}", entry_path.display());
-        let full_install_path = if entry_path.starts_with(&unpacked_include) {
-            let include_file = unwrap!(entry_path.strip_prefix(arch_path));
-            println!(
-                "Unpacking include file {} to {}",
-                entry_path.display(),
-                include_file.display()
-            );
-            install_dir.join(include_file)
-        } else if entry_path == unpacked_lib {
-            lib_install_dir.join("libsodium.a")
-        } else {
-            continue;
-        };
-        unwrap!(entry.unpack(full_install_path));
+
+        // 1. Include path
+        if entry_path.starts_with(&unpacked_include) {
+            let relative_path = unwrap!(entry_path.strip_prefix(&unpacked_include));
+            let install_path = include_install_dir.join(&relative_path);
+            unwrap!(entry.unpack(install_path));
+        }
+        // 2. Lib path
+        else if entry_path == unpacked_lib {
+            let install_path = lib_install_dir.join("libsodium.a");
+            unwrap!(entry.unpack(install_path));
+        }
     }
 
     // Clean up
