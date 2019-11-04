@@ -104,7 +104,7 @@ fn probe_libsodium_vcpkg() -> bool {
 
 #[cfg(windows)]
 fn get_install_dir() -> String {
-    format!("{}/installed", unwrap!(env::var("OUT_DIR")))
+    unwrap!(env::var("OUT_DIR"))
 }
 
 #[cfg(windows)]
