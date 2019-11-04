@@ -226,8 +226,9 @@ fn build() {
     let unpacked_lib = arch_path.join("Release/v140/static/libsodium.lib");
     for i in 0..zip_archive.len() {
         let mut entry = unwrap!(zip_archive.by_index(i));
-        let entry_name = entry.name().to_string();
-        let entry_path = Path::new(&entry_name);
+        let entry_name = entry.name();
+        let entry_path = Path::new(entry_name);
+        println!("Unpacking zipped file {}", entry_path.display());
         let opt_install_path = if entry_path.starts_with("include") {
             println!("Unpacking headers {}", entry_path.display());
             let is_dir = (unwrap!(entry.unix_mode()) & S_IFDIR as u32) != 0;
@@ -297,6 +298,7 @@ fn build() {
     for entry_result in entries {
         let mut entry = unwrap!(entry_result);
         let entry_path = unwrap!(entry.path()).to_path_buf();
+        println!("Unpacking zipped file {}", entry_path.display());
         let full_install_path = if entry_path.starts_with(&unpacked_include) {
             let include_file = unwrap!(entry_path.strip_prefix(arch_path));
             println!(
