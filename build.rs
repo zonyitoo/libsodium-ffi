@@ -51,15 +51,21 @@ fn build_libsodium() {
         return;
     }
 
+    let is_static = match env::var_os("SODIUM_STATIC") {
+        Some(_) => {
+            println!("cargo:rustc-link-lib=static={}", SODIUM_LINK_NAME);
+            true
+        },
+        None => {
+            println!("cargo:rustc-link-lib=dylib={}", SODIUM_LINK_NAME);
+            false
+        },
+    };
+    
     // Use library provided by environ
     if let Ok(lib_dir) = env::var("SODIUM_LIB_DIR") {
-        println!("cargo:rustc-link-search=native={}", lib_dir);
-
-        let mode = match env::var_os("SODIUM_STATIC") {
-            Some(_) => "static",
-            None => "dylib",
-        };
-        println!("cargo:rustc-link-lib={}={}", mode, SODIUM_LINK_NAME);
+        let kind = if is_static { "static" } else { "native" };
+        println!("cargo:rustc-link-search={}={}", kind, lib_dir);
 
         match env::var("SODIUM_INCLUDE_DIR") {
             Err(..) => panic!("You have to provide SODIUM_LIB_DIR and SODIUM_INCLUDE_DIR together"),
