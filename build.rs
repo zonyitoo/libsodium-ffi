@@ -1,21 +1,15 @@
-extern crate cc;
-#[cfg(windows)]
-extern crate flate2;
-extern crate pkg_config;
-#[macro_use]
-extern crate unwrap;
-extern crate bindgen;
-#[cfg(windows)]
-extern crate tar;
-#[cfg(windows)]
-extern crate vcpkg;
-#[cfg(windows)]
-extern crate zip;
-
 use std::env;
 use std::path::PathBuf;
 #[cfg(unix)]
 use std::process::{Command, Stdio};
+
+use bindgen;
+use pkg_config;
+use tar;
+use unwrap::unwrap;
+use vcpkg;
+#[cfg(windows)]
+use zip;
 
 const VERSION: &'static str = "1.0.18";
 
@@ -87,6 +81,19 @@ fn build_libsodium() {
         generate_bindings(&vec![include_dir]);
     } else {
         // Uses system-wide libsodium
+        // For windows, check vcpkg first
+        if cfg!(windows) {
+            match vcpkg::find_package("libsodium") {
+                Ok(lib) => {
+                    generate_bindings(&lib.include_paths);
+                }
+                Err(..) => {
+                    println!("cargo:warning=Failed to find \"libsodium\" in vcpkg, falling back to pkg-config");
+                }
+            }
+        }
+
+        // Uses pkg-config
         match pkg_config::find_library("libsodium") {
             Ok(lib) => {
                 generate_bindings(&lib.include_paths);
@@ -146,6 +153,9 @@ fn download_compressed_file() -> PathBuf {
         "https://download.libsodium.org/libsodium/releases/{}",
         zip_filename
     );
+
+    println!("Downloading {} from {}", zip_filename, url);
+
     let mut zip_path = get_install_dir();
     zip_path.push(&zip_filename);
     let command = format!(
@@ -153,14 +163,17 @@ fn download_compressed_file() -> PathBuf {
         url, zip_path.display()
     );
     let mut download_cmd = Command::new("powershell");
-    let download_output = download_cmd
-        .arg("-Command")
-        .arg(&command)
-        .output()
-        .unwrap_or_else(|error| {
-            panic!("Failed to run powershell download command: {}", error);
-        });
+    download_cmd.arg("-Command").arg(&command);
+    println!("Running command: {:?}", download_cmd);
+    let download_output = download_cmd.output().unwrap_or_else(|error| {
+        panic!("Failed to run powershell download command: {}", error);
+    });
     if download_output.status.success() {
+        println!(
+            "Finished donwload {}, saved to {}",
+            zip_filename,
+            zip_path.display()
+        );
         return zip_path;
     }
 
@@ -178,13 +191,11 @@ fn download_compressed_file() -> PathBuf {
         fallback_url, zip_path.display()
     );
     let mut download_cmd = Command::new("powershell");
-    let download_output = download_cmd
-        .arg("-Command")
-        .arg(&command)
-        .output()
-        .unwrap_or_else(|error| {
-            panic!("Failed to run powershell download command: {}", error);
-        });
+    download_cmd.arg("-Command").arg(&command);
+    println!("Running command: {:?}", download_cmd);
+    let download_output = download_cmd.output().unwrap_or_else(|error| {
+        panic!("Failed to run powershell download command: {}", error);
+    });
     if !download_output.status.success() {
         panic!(
             "\n{:?}\n{}\n{}\n",
@@ -193,6 +204,12 @@ fn download_compressed_file() -> PathBuf {
             String::from_utf8_lossy(&download_output.stderr)
         );
     }
+
+    println!(
+        "Finished donwload {}, saved to {}",
+        zip_filename,
+        zip_path.display()
+    );
     zip_path
 }
 
@@ -208,6 +225,8 @@ fn download_compressed_file() -> PathBuf {
         zip_filename
     );
 
+    println!("Downloading {} from {}", zip_filename, url);
+
     let mut gz_path = get_install_dir();
     gz_path.push(&zip_filename);
 
@@ -221,6 +240,12 @@ fn download_compressed_file() -> PathBuf {
         Ok(n)
     }));
     unwrap!(easy.perform());
+
+    println!(
+        "Finished download {}, saved to {}",
+        zip_filename,
+        gz_path.display()
+    );
 
     gz_path
 }
@@ -404,14 +429,10 @@ fn build() {
     unwrap!(archive.unpack(&dst));
 
     let root = dst.join(format!("libsodium-{}", VERSION));
+
+    println!("Finished unpack to {}", root.display());
+
     let target = unwrap!(env::var("TARGET"));
-
-    // let mut autogen_cmd = Command::new("sh");
-    // autogen_cmd.arg("-c");
-
-    // let ccmd = format!("{}", root.join("autogen.sh").display());
-    // autogen_cmd.arg(&ccmd);
-    // run(autogen_cmd.current_dir(&root));
 
     let include_dir = dst.join("include");
 
@@ -458,14 +479,13 @@ fn build() {
             "make"
         }
     }
-}
 
-#[cfg(unix)]
-fn run(cmd: &mut Command) {
-    println!("running: {:?}", cmd);
-    assert!(unwrap!(cmd
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .status())
-    .success());
+    fn run(cmd: &mut Command) {
+        println!("Run command: {:?}", cmd);
+        assert!(unwrap!(cmd
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
+            .status())
+        .success());
+    }
 }
