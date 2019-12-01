@@ -26,5 +26,5 @@ env:
   - SODIUM_BUILD_STATIC=yes
 
 script:
-  - cargo build -vv
-  - cargo test -vv
+  - cargo build
+  - cargo test

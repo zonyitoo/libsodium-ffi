@@ -24,7 +24,7 @@ install:
 build: false
 
 test_script:
-  - cargo test -vv --no-fail-fast
+  - cargo test --no-fail-fast
 
 cache:
   - target

@@ -5,7 +5,6 @@ use std::process::{Command, Stdio};
 
 use bindgen;
 use pkg_config;
-use tar;
 use unwrap::unwrap;
 use vcpkg;
 #[cfg(windows)]
@@ -23,6 +22,8 @@ fn main() {
 }
 
 fn generate_bindings(include_dirs: &[PathBuf]) {
+    println!("Invoking bindgen with search paths {:?}", include_dirs);
+
     let mut builder = bindgen::Builder::default().header("sodium_wrapper.h");
     for p in include_dirs {
         builder = builder.clang_arg(format!("-I{}", p.display()));
@@ -288,8 +289,12 @@ fn build() {
     // The library path inside the archive
     let unpacked_lib = arch_path.join("Release/v140/static/libsodium.lib");
 
+    println!("Searching for lib {}", unpacked_lib.display());
+
     // Include path prefix
     let unpacked_include = Path::new("libsodium/include");
+
+    println!("Searching for headers from {}", unpacked_include.display());
 
     fn copy_file<R: Read, W: Write>(r: &mut R, w: &mut W) -> io::Result<()> {
         let mut buf = [0u8; 10240];
@@ -314,6 +319,8 @@ fn build() {
             let lib_file_path = lib_install_dir.join("libsodium.lib");
             let mut lib_file = unwrap!(File::create(&lib_file_path));
             unwrap!(copy_file(&mut entry, &mut lib_file));
+
+            println!("Unpacked lib to {}", lib_file_path.display());
         }
         // 2. include path
         else if entry_path.starts_with(unpacked_include) {
@@ -326,6 +333,8 @@ fn build() {
                 let mut include_file = unwrap!(File::create(&include_file_path));
                 unwrap!(copy_file(&mut entry, &mut include_file));
             }
+
+            println!("Unpacked header to {}", include_file_path.display());
         }
     }
 
@@ -375,8 +384,11 @@ fn build() {
         panic!("target_pointer_width not 32 or 64")
     };
 
-    let unpacked_include = arch_path.join("include");
     let unpacked_lib = arch_path.join("lib\\libsodium.a");
+    println!("Searching for lib {}", unpacked_lib.display());
+
+    let unpacked_include = arch_path.join("include");
+    println!("Searching for headers from {}", unpacked_include.display());
 
     for entry_result in unwrap!(archive.entries()) {
         let mut entry = unwrap!(entry_result);
@@ -387,11 +399,15 @@ fn build() {
             let relative_path = unwrap!(entry_path.strip_prefix(&unpacked_include));
             let install_path = include_install_dir.join(&relative_path);
             unwrap!(entry.unpack(install_path));
+
+            println!("Unpacked header to {}", install_path.display());
         }
         // 2. Lib path
         else if entry_path == unpacked_lib {
             let install_path = lib_install_dir.join("libsodium.a");
             unwrap!(entry.unpack(install_path));
+
+            println!("Unpacked lib to {}", install_path.display());
         }
     }
 
