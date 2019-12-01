@@ -7,8 +7,6 @@ use bindgen;
 use pkg_config;
 use unwrap::unwrap;
 use vcpkg;
-#[cfg(windows)]
-use zip;
 
 const VERSION: &'static str = "1.0.18";
 
@@ -398,14 +396,14 @@ fn build() {
         if entry_path.starts_with(&unpacked_include) {
             let relative_path = unwrap!(entry_path.strip_prefix(&unpacked_include));
             let install_path = include_install_dir.join(&relative_path);
-            unwrap!(entry.unpack(install_path));
+            unwrap!(entry.unpack(&install_path));
 
             println!("Unpacked header to {}", install_path.display());
         }
         // 2. Lib path
         else if entry_path == unpacked_lib {
             let install_path = lib_install_dir.join("libsodium.a");
-            unwrap!(entry.unpack(install_path));
+            unwrap!(entry.unpack(&install_path));
 
             println!("Unpacked lib to {}", install_path.display());
         }
