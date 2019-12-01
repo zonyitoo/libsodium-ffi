@@ -55,13 +55,12 @@ fn build_libsodium() {
         Some(_) => {
             println!("cargo:rustc-link-lib=static={}", SODIUM_LINK_NAME);
             true
-        },
+        }
         None => {
             println!("cargo:rustc-link-lib=dylib={}", SODIUM_LINK_NAME);
             false
-        },
+        }
     };
-    
     // Use library provided by environ
     if let Ok(lib_dir) = env::var("SODIUM_LIB_DIR") {
         let kind = if is_static { "static" } else { "native" };
@@ -109,7 +108,6 @@ fn probe_libsodium_vcpkg() -> bool {
     false
 }
 
-#[cfg(windows)]
 fn get_install_dir() -> PathBuf {
     PathBuf::from(unwrap!(env::var("OUT_DIR")))
 }
@@ -196,6 +194,35 @@ fn download_compressed_file() -> PathBuf {
         );
     }
     zip_path
+}
+
+#[cfg(unix)]
+fn download_compressed_file() -> PathBuf {
+    use curl::easy::Easy;
+    use std::fs::File;
+    use std::io::Write;
+
+    let zip_filename = format!("libsodium-{}.tar.gz", VERSION);
+    let url = format!(
+        "https://download.libsodium.org/libsodium/releases/{}",
+        zip_filename
+    );
+
+    let mut gz_path = get_install_dir();
+    gz_path.push(&zip_filename);
+
+    // Download to .tar.gz
+    let mut zf = unwrap!(File::create(&gz_path));
+
+    let mut easy = Easy::new();
+    unwrap!(easy.url(&url));
+    unwrap!(easy.write_function(move |data| {
+        let n = unwrap!(zf.write(data));
+        Ok(n)
+    }));
+    unwrap!(easy.perform());
+
+    gz_path
 }
 
 #[cfg(all(windows, target_env = "msvc"))]
@@ -311,7 +338,7 @@ fn build() {
 
     // Unpack the tarball
     let gz_archive = unwrap!(File::open(&gz_path));
-    let gz_decoder = unwrap!(GzDecoder::new(gz_archive));
+    let gz_decoder = GzDecoder::new(gz_archive);
     let mut archive = Archive::new(gz_decoder);
 
     // Extract just the appropriate version of libsodium.a and headers to the install path
@@ -356,27 +383,39 @@ fn build() {
 
 #[cfg(unix)]
 fn build() {
-    use std::fs;
+    use flate2::read::GzDecoder;
+    use std::fs::{self, File};
     use std::path::Path;
+    use tar::Archive;
+
+    let gz_path = download_compressed_file();
+
+    // Unpack the tarball
+    let gz_archive = unwrap!(File::open(&gz_path));
+    let gz_decoder = GzDecoder::new(gz_archive);
+    let mut archive = Archive::new(gz_decoder);
 
     // Build one by ourselves
-    let cargo_dir = unwrap!(env::var("CARGO_MANIFEST_DIR"));
     let output_dir = unwrap!(env::var("OUT_DIR"));
 
-    let src = Path::new(&cargo_dir[..]);
     let dst = Path::new(&output_dir[..]);
+
+    // Unpack to ${OUTPUT_DIR}/libsodium-VERSION
+    unwrap!(archive.unpack(&dst));
+
+    let root = dst.join(format!("libsodium-{}", VERSION));
     let target = unwrap!(env::var("TARGET"));
 
-    let root = src.join("libsodium");
+    // let mut autogen_cmd = Command::new("sh");
+    // autogen_cmd.arg("-c");
 
-    let mut autogen_cmd = Command::new("sh");
-    autogen_cmd.arg("-c");
+    // let ccmd = format!("{}", root.join("autogen.sh").display());
+    // autogen_cmd.arg(&ccmd);
+    // run(autogen_cmd.current_dir(&root));
 
-    let ccmd = format!("{}", root.join("autogen.sh").display());
-    autogen_cmd.arg(&ccmd);
-    run(autogen_cmd.current_dir(&root));
+    let include_dir = dst.join("include");
 
-    let _ = fs::remove_dir_all(&dst.join("include"));
+    let _ = fs::remove_dir_all(&include_dir);
     let _ = fs::remove_dir_all(&dst.join("lib"));
 
     let build_dir = dst.join("build");
@@ -409,6 +448,7 @@ fn build() {
 
     println!("cargo:rustc-link-lib=static=sodium");
     println!("cargo:rustc-link-search=native={}/lib", dst.display());
+    println!("cargo:include={}", include_dir.display());
     println!("cargo:root={}", dst.display());
 
     fn make() -> &'static str {
