@@ -106,7 +106,7 @@ fn build_libsodium() {
 
 #[cfg(windows)]
 fn probe_libsodium_vcpkg() -> bool {
-    vcpkg::probe_package("libsodium").is_ok()
+    vcpkg::probe_package("libsodium:x64-windows-static").is_ok()
 }
 
 #[cfg(not(windows))]
