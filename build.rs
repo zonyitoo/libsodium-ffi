@@ -26,6 +26,27 @@ fn generate_bindings(include_dirs: &[PathBuf]) {
     for p in include_dirs {
         builder = builder.clang_arg(format!("-I{}", p.display()));
     }
+
+    if let Ok(include_dirs) = env::var("SODIUM_BUILD_INCLUDE_DIR") {
+        if cfg!(unix) {
+            for p in include_dirs.split(':') {
+                println!("Appending customized bindgen extra search path {}", p);
+                builder = builder.clang_arg(format!("-I{}", p));
+            }
+        } else if cfg!(windows) {
+            for p in include_dirs.split(';') {
+                println!("Appending customized bindgen extra search path {}", p);
+                builder = builder.clang_arg(format!("-I{}", p));
+            }
+        } else {
+            println!(
+                "Appending customized bindgen extra search path {}",
+                include_dirs
+            );
+            builder = builder.clang_arg(format!("-I{}", include_dirs));
+        }
+    }
+
     let bindings = builder.generate().expect("Unable to generate bindings");
 
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
@@ -39,6 +60,7 @@ fn build_libsodium() {
     println!("cargo:rerun-if-env-changed=SODIUM_INCLUDE_DIR");
     println!("cargo:rerun-if-env-changed=SODIUM_STATIC");
     println!("cargo:rerun-if-env-changed=SODIUM_BUILD_STATIC");
+    println!("cargo:rerun-if-env-changed=SODIUM_BUILD_INCLUDE_DIR");
 
     if probe_libsodium_vcpkg() {
         return;
@@ -106,7 +128,8 @@ fn build_libsodium() {
 
 #[cfg(windows)]
 fn probe_libsodium_vcpkg() -> bool {
-    vcpkg::probe_package("libsodium").is_ok() || vcpkg::probe_package("libsodium:x64-windows-static").is_ok()
+    vcpkg::probe_package("libsodium").is_ok()
+        || vcpkg::probe_package("libsodium:x64-windows-static").is_ok()
 }
 
 #[cfg(not(windows))]
